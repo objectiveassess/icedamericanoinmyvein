@@ -59,11 +59,12 @@
     }
     .dot small{font-size:12px;color:var(--muted)}
     .likert input:checked + .dot{
-      background-color:#fff;
-      border-color:var(--coffee-mid);
-      box-shadow:none;
-      transform:scale(0.96);
-    }
+  background-color:#fff;
+  border-color:var(--coffee-dark);  /* 더 진한 커피색으로 변경 */
+  border-width:3px;                 /* 테두리 두께 살짝 증가 */
+  box-shadow:0 0 0 3px rgba(107,62,38,0.15); /* 살짝 외곽빛 (선택 강조) */
+  transform:scale(0.94);            /* 살짝 눌림 효과 */
+}
     .likert input:checked + .dot small{color:var(--coffee-dark)}
 
     button{background:var(--coffee-dark);border:none;color:white;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800;font-size:14px;box-shadow:0 6px 14px rgba(107,62,38,0.18)}
