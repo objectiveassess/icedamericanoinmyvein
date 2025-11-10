@@ -1,0 +1,13 @@
+[
+  {"name":"아틀리에 빈","acidity":2,"nutty":2,"bitter":3},
+  {"name":"KFC","acidity":1,"nutty":3,"bitter":4},
+  {"name":"피크닉 스테이션","acidity":2,"nutty":4,"bitter":1},
+  {"name":"할리스커피(일반)","acidity":4,"nutty":1,"bitter":3},
+  {"name":"빅핸즈(콜롬비아원두)","acidity":4,"nutty":2,"bitter":2},
+  {"name":"GS25(맥심 시그니처 블렌드)","acidity":1,"nutty":3,"bitter":1},
+  {"name":"톰루이바이고바슨(만델링 원두)","acidity":3,"nutty":3,"bitter":1},
+  {"name":"일청담카페","acidity":3,"nutty":2,"bitter":2},
+  {"name":"경대리아","acidity":1,"nutty":4,"bitter":2},
+  {"name":"세븐일레븐","acidity":3,"nutty":2,"bitter":2},
+  {"name":"스타벅스 카페모먼트 스무스(커피스틱)","acidity":2,"nutty":3,"bitter":2}
+]
