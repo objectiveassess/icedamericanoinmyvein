@@ -28,14 +28,27 @@
     .question{margin-bottom:26px}
     .q-title{font-weight:800;font-size:15px;margin-bottom:10px}
 
-    /* 💡 좋아한다/싫어한다 UI + 단일 원형 버튼 */
+    /* 💡 좋아한다/싫어한다 UI */
     .likert-block{display:flex;flex-direction:column;align-items:center;margin-top:6px}
     .choice-labels{width:100%;display:flex;justify-content:space-between;color:var(--coffee-dark);font-weight:700;font-size:13px;margin-bottom:8px;padding:0 8px}
     .likert-row{display:flex;justify-content:space-between;gap:12px;width:100%;max-width:320px}
-    .likert label{display:flex;flex-direction:column;align-items:center;cursor:pointer;flex:1}
-    .likert input{display:none}
+    .likert label{display:flex;flex-direction:column;align-items:center;cursor:pointer;flex:1;position:relative}
 
-    /* 🔸동그라미(겹침 제거 완벽) */
+    /* ✅ 기본 라디오 완전 숨김 (iOS/Safari 등 겹침 제거) */
+    .likert input[type="radio"]{
+      position:absolute;
+      inset:0;
+      width:0;
+      height:0;
+      margin:0;
+      opacity:0;
+      pointer-events:none;
+      appearance:none;
+      -webkit-appearance:none;
+      -moz-appearance:none;
+    }
+
+    /* 동그라미 스타일 */
     .dot{
       width:var(--tap);height:var(--tap);
       border-radius:50%;
@@ -46,10 +59,10 @@
     }
     .dot small{font-size:12px;color:var(--muted)}
     .likert input:checked + .dot{
-      background-color:#fff;      /* 내부 배경 그대로 유지 */
-      border-color:var(--coffee-mid); /* 테두리 색만 진하게 */
-      box-shadow:none;            /* 겹침 제거 */
-      transform:scale(0.96);      /* 눌리는 피드백 */
+      background-color:#fff;
+      border-color:var(--coffee-mid);
+      box-shadow:none;
+      transform:scale(0.96);
     }
     .likert input:checked + .dot small{color:var(--coffee-dark)}
 
