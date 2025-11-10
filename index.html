@@ -8,7 +8,7 @@
     :root{
       --bg:#f5efe9; --card:#fff; --muted:#7a6a5a;
       --coffee-dark:#6b3e26; --coffee-mid:#a67856;
-      --tap:48px; --radius:14px;
+      --tap:38px; --radius:14px;
       --shadow:0 6px 20px rgba(107,62,38,0.06);
       --shadow-strong:0 14px 40px rgba(107,62,38,0.28);
     }
@@ -27,39 +27,31 @@
     .card{background:var(--card);padding:18px;border-radius:12px;margin-top:16px;box-shadow:var(--shadow)}
     .question{margin-bottom:26px}
     .q-title{font-weight:800;font-size:15px;margin-bottom:10px}
-    
-    /* 🔹 새 구조: “좋아한다 / 싫어한다”를 위로 */
-    .likert-block{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      margin-top:6px;
-    }
-    .likert-row{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
-    .likert label{
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:4px;
-      cursor:pointer;
-    }
-    .likert input{display:none}
-    .dot{width:var(--tap);height:var(--tap);border-radius:50%;border:3px solid rgba(107,62,38,0.25);
-      display:flex;align-items:center;justify-content:center;transition:all .18s}
-    .dot small{font-size:12px;color:var(--muted)}
-    .likert input:checked+.dot{background:var(--coffee-mid);border-color:var(--coffee-mid);box-shadow:0 6px 18px rgba(0,0,0,0.08)}
-    .likert input:checked+.dot small{color:white}
 
-    .choice-labels{
-      width:100%;
-      display:flex;
-      justify-content:space-between;
-      color:var(--coffee-dark);
-      font-weight:700;
-      font-size:13px;
-      margin-bottom:4px;
-      padding:0 12px;
+    /* 💡 좋아한다/싫어한다 UI + 단일 원형 버튼 */
+    .likert-block{display:flex;flex-direction:column;align-items:center;margin-top:6px}
+    .choice-labels{width:100%;display:flex;justify-content:space-between;color:var(--coffee-dark);font-weight:700;font-size:13px;margin-bottom:8px;padding:0 8px}
+    .likert-row{display:flex;justify-content:space-between;gap:12px;width:100%;max-width:320px}
+    .likert label{display:flex;flex-direction:column;align-items:center;cursor:pointer;flex:1}
+    .likert input{display:none}
+
+    /* 🔸동그라미(겹침 제거 완벽) */
+    .dot{
+      width:var(--tap);height:var(--tap);
+      border-radius:50%;
+      border:2px solid rgba(107,62,38,0.35);
+      display:flex;align-items:center;justify-content:center;
+      background-color:#fff;
+      transition:border-color .18s,transform .12s;
     }
+    .dot small{font-size:12px;color:var(--muted)}
+    .likert input:checked + .dot{
+      background-color:#fff;      /* 내부 배경 그대로 유지 */
+      border-color:var(--coffee-mid); /* 테두리 색만 진하게 */
+      box-shadow:none;            /* 겹침 제거 */
+      transform:scale(0.96);      /* 눌리는 피드백 */
+    }
+    .likert input:checked + .dot small{color:var(--coffee-dark)}
 
     button{background:var(--coffee-dark);border:none;color:white;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800;font-size:14px;box-shadow:0 6px 14px rgba(107,62,38,0.18)}
     .muted-btn{background:transparent;border:1px solid rgba(107,62,38,0.16);color:var(--coffee-dark);box-shadow:none}
@@ -76,14 +68,15 @@
     .item .sub{font-size:13px;color:#555}
     @media(max-width:560px){
       header{align-items:flex-start}
-      .actions button{flex:1}
-      .dot{width:44px;height:44px}
+      .dot{width:32px;height:32px}
+      .likert-row{gap:10px;max-width:260px}
+      .choice-labels{font-size:12px}
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 </head>
 <body>
-  <div class="wrap">
+  <div class="wrap" id="pageWrap">
     <header>
       <img src="./logo.png" alt="커피 로고">
       <div>
@@ -99,7 +92,7 @@
           <div class="q-title">1) 산미 — ‘시다’ 정도</div>
           <div class="likert-block">
             <div class="choice-labels"><span>좋아한다</span><span>싫어한다</span></div>
-            <div class="likert-row">
+            <div class="likert-row likert">
               <label><input type="radio" name="sour" value="4"><div class="dot"><small>매우</small></div></label>
               <label><input type="radio" name="sour" value="3"><div class="dot"><small>약간</small></div></label>
               <label><input type="radio" name="sour" value="2"><div class="dot"><small>약간</small></div></label>
@@ -112,7 +105,7 @@
           <div class="q-title">2) 고소함 — ‘고소하다’ 정도</div>
           <div class="likert-block">
             <div class="choice-labels"><span>좋아한다</span><span>싫어한다</span></div>
-            <div class="likert-row">
+            <div class="likert-row likert">
               <label><input type="radio" name="nutty" value="4"><div class="dot"><small>매우</small></div></label>
               <label><input type="radio" name="nutty" value="3"><div class="dot"><small>약간</small></div></label>
               <label><input type="radio" name="nutty" value="2"><div class="dot"><small>약간</small></div></label>
@@ -125,7 +118,7 @@
           <div class="q-title">3) 쓴맛 — ‘쓰다’ 정도</div>
           <div class="likert-block">
             <div class="choice-labels"><span>좋아한다</span><span>싫어한다</span></div>
-            <div class="likert-row">
+            <div class="likert-row likert">
               <label><input type="radio" name="bitter" value="4"><div class="dot"><small>매우</small></div></label>
               <label><input type="radio" name="bitter" value="3"><div class="dot"><small>약간</small></div></label>
               <label><input type="radio" name="bitter" value="2"><div class="dot"><small>약간</small></div></label>
@@ -165,22 +158,19 @@
   </div>
 
   <script>
-    const GITHUB_JSON_URL = './coffee-data.json?v=7';
+    const GITHUB_JSON_URL = './coffee-data.json?v=8';
     let coffeeList = [];
     let lastFetched = null;
     const statusEl = document.getElementById('status');
-
     const viewQuiz = document.getElementById('view-quiz');
     const viewResult = document.getElementById('view-result');
 
-    // 데이터 불러오기
     async function fetchCoffeeData() {
       statusEl.textContent = '저장된 커피 데이터 불러오는 중…';
       try {
         const res = await fetch(GITHUB_JSON_URL, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const list = await res.json();
-        if (!Array.isArray(list)) throw new Error('JSON 구조 오류');
         coffeeList = list;
         lastFetched = new Date();
         statusEl.textContent = `저장된 커피 데이터 총 ${coffeeList.length}개`;
@@ -196,28 +186,29 @@
       const s=getScore('sour'), n=getScore('nutty'), b=getScore('bitter');
       if(!s||!n||!b){alert('모든 문항을 선택하세요.');return;}
       if(!coffeeList.length){alert('데이터가 없습니다.');return;}
-
       let best=null,bestScore=Infinity;
       coffeeList.forEach(c=>{
         const d=distance([s,n,b],[c.acidity,c.nutty,c.bitter]);
         if(d<bestScore){bestScore=d;best=c;}
       });
-
       document.getElementById('resName').textContent=best.name;
       document.getElementById('resDesc').textContent=`산미 ${best.acidity}, 고소함 ${best.nutty}, 쓴맛 ${best.bitter}`;
       document.getElementById('metaNote').textContent=`데이터 기준: ${lastFetched?.toLocaleString('ko-KR')}`;
-      viewQuiz.classList.remove('active'); viewResult.classList.add('active');
+      viewQuiz.classList.remove('active');
+      viewResult.classList.add('active');
       window.__lastChoice={s,n,b,best};
+      window.scrollTo({top:0,behavior:'smooth'});
     }
 
+    // 📸 페이지 전체 캡처
     async function saveResultAsJPEG(){
-      if(!window.html2canvas){alert('이미지 저장 라이브러리 오류');return;}
-      const card=document.getElementById('resultCard');
-      const canvas=await html2canvas(card,{scale:2,backgroundColor:null});
-      const a=document.createElement('a');
-      a.href=canvas.toDataURL('image/jpeg',0.95);
-      a.download=`coffee-result-${Date.now()}.jpg`;
-      a.click();
+      if(!window.html2canvas){alert('이미지 저장 라이브러리를 불러오지 못했습니다.');return;}
+      const full=document.getElementById('pageWrap');
+      const canvas=await html2canvas(full,{scale:2,backgroundColor:'#f5efe9',useCORS:true});
+      const link=document.createElement('a');
+      link.href=canvas.toDataURL('image/jpeg',0.95);
+      link.download=`coffee-result-${Date.now()}.jpg`;
+      link.click();
     }
 
     function showSimilarList(){
