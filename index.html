@@ -145,7 +145,7 @@
       display:none;
       justify-content:center;
       margin-top:24px;
-      margin-bottom:12px;  /* 아래 버튼과 안 겹치게 여유 */
+      margin-bottom:12px;  /* 아래 버튼과 간격 */
     }
 
     .result-container{
@@ -154,20 +154,21 @@
       display:flex;
       justify-content:center;
     }
+
     .result-card{
       width:100%;
       max-width:420px;
-      /* 비율 고정 대신 높이 제한: 웬만한 폰에서 한 화면에 거의 다 보이게 */
-      max-height:min(640px, 90vh);
+      height:auto;              /* 자동 높이 */
       background:var(--card-bg);
       border-radius:16px;
       border:1px solid var(--line);
       box-shadow:0 10px 30px rgba(0,0,0,0.08);
-      padding:16px 16px 18px;
+      padding:16px 16px 22px;
       display:flex;
       flex-direction:column;
       color:var(--ink);
-      overflow:hidden;
+      /* overflow 제거: 내용 안 잘리게 */
+      overflow:visible;
     }
 
     .report-header{
@@ -358,8 +359,7 @@
       .likert{gap:6px;}
       .likert-option{gap:3px;}
       .result-card{
-        padding:12px 12px 14px;
-        max-height:90vh;
+        padding:12px 12px 18px;
       }
       .main-box h1{font-size:17px;}
     }
@@ -723,10 +723,17 @@
     /* ===== 결과 이미지 저장 ===== */
     document.getElementById("saveImageBtn").addEventListener("click", ()=>{
       const target = document.getElementById("resultCard");
-      html2canvas(target,{scale:2}).then(canvas=>{
+
+      html2canvas(target,{
+        scale:2,
+        useCORS:true,
+        windowWidth: target.scrollWidth,
+        windowHeight: target.scrollHeight,
+        scrollY: -window.scrollY
+      }).then(canvas=>{
         const link = document.createElement("a");
         link.download = "coffee-result.jpg";
-        link.href = canvas.toDataURL("image/jpeg",0.9);
+        link.href = canvas.toDataURL("image/jpeg",0.95);
         link.click();
       });
     });
