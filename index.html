@@ -3,255 +3,541 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>나의피는커피로되어있어 — 아이스아메리카노 취향 검사</title>
+  <title> 커피형 인간입니다. — 본인의 혈액 속 커피 유전자를 분석해드립니다.</title>
   <style>
     :root{
-      --bg:#f5efe9; --card:#fff; --muted:#7a6a5a;
-      --coffee-dark:#6b3e26; --coffee-mid:#a67856;
-      --tap:38px; --radius:14px;
+      --bg:#f5efe9;
+      --card:#fff;
+      --muted:#7a6a5a;
+      --coffee-dark:#6b3e26;
+      --coffee-mid:#a67856;
+      --tap:48px;
+      --radius:14px;
       --shadow:0 6px 20px rgba(107,62,38,0.06);
       --shadow-strong:0 14px 40px rgba(107,62,38,0.28);
+
+      /* 결과 카드용 공통 변수 */
+      --ink:#4a2c1a;
+      --card-bg:#fffdf7;
+      --line:rgba(0,0,0,0.12);
+      --accent:#a67856;
     }
     *{box-sizing:border-box;margin:0;padding:0}
     body{
       font-family:'Noto Sans KR',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-      background:var(--bg); color:var(--coffee-dark);
+      background:var(--bg);
+      color:var(--coffee-dark);
       padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
       line-height:1.45;
     }
-    .wrap{max-width:880px;margin:0 auto;padding:24px;background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.85));border-radius:var(--radius)}
+    .wrap{
+      max-width:880px;
+      margin:0 auto;
+      padding:24px;
+      background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.85));
+      border-radius:var(--radius);
+    }
     header{display:flex;align-items:center;gap:14px;margin-bottom:10px}
     header img{width:64px;height:64px;border-radius:12px;object-fit:cover;box-shadow:0 4px 14px rgba(0,0,0,0.06)}
     h1{font-size:22px}
     p.lead{margin-top:4px;color:var(--muted);font-size:14px}
     .card{background:var(--card);padding:18px;border-radius:12px;margin-top:16px;box-shadow:var(--shadow)}
-    .question{margin-bottom:26px}
+    .question{margin-bottom:22px}
     .q-title{font-weight:800;font-size:15px;margin-bottom:10px}
-
-    /* 💡 좋아한다/싫어한다 UI */
-    .likert-block{display:flex;flex-direction:column;align-items:center;margin-top:6px}
-    .choice-labels{width:100%;display:flex;justify-content:space-between;color:var(--coffee-dark);font-weight:700;font-size:13px;margin-bottom:8px;padding:0 8px}
-    .likert-row{display:flex;justify-content:space-between;gap:12px;width:100%;max-width:320px}
-    .likert label{display:flex;flex-direction:column;align-items:center;cursor:pointer;flex:1;position:relative}
-
-    /* ✅ 기본 라디오 완전 숨김 (iOS/Safari 등 겹침 제거) */
-    .likert input[type="radio"]{
-      position:absolute;
-      inset:0;
-      width:0;
-      height:0;
-      margin:0;
-      opacity:0;
-      pointer-events:none;
-      appearance:none;
-      -webkit-appearance:none;
-      -moz-appearance:none;
-    }
-
-    /* 동그라미 스타일 */
-    .dot{
-      width:var(--tap);height:var(--tap);
-      border-radius:50%;
-      border:2px solid rgba(107,62,38,0.35);
-      display:flex;align-items:center;justify-content:center;
-      background-color:#fff;
-      transition:border-color .18s,transform .12s;
-    }
+    .likert-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+    .likert-label{width:80px;text-align:center;color:var(--coffee-dark);font-weight:700;font-size:13px}
+    .likert{display:flex;gap:18px;justify-content:space-between;flex:1}
+    .likert label{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+    .likert input{display:none}
+    .dot{width:var(--tap);height:var(--tap);border-radius:50%;border:3px solid rgba(107,62,38,0.25);display:flex;align-items:center;justify-content:center;transition:all .18s}
     .dot small{font-size:12px;color:var(--muted)}
-    .likert input:checked + .dot{
-      background-color:rgba(166,120,86,0.1); /* 부드러운 커피톤 배경 */
-      border-color:var(--coffee-dark);       /* 더 진한 커피색 테두리 */
-      border-width:3px;                      /* 테두리 조금 더 두껍게 */
-      box-shadow:0 0 0 3px rgba(107,62,38,0.18); /* 외곽 빛 살짝 */
-      transform:scale(0.94);                 /* 눌린 느낌 */
-      transition:all .15s ease;
-    }
-    .likert input:checked + .dot small{
-      color:var(--coffee-dark);              /* 글자도 짙게 */
-      font-weight:700;
-    }
-    .likert input:checked + .dot small{color:var(--coffee-dark)}
-
+    .likert input:checked+.dot{background:var(--coffee-mid);border-color:var(--coffee-mid);box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+    .likert input:checked+.dot small{color:white}
     button{background:var(--coffee-dark);border:none;color:white;padding:12px 16px;border-radius:12px;cursor:pointer;font-weight:800;font-size:14px;box-shadow:0 6px 14px rgba(107,62,38,0.18)}
-    .muted-btn{background:transparent;border:1px solid rgba(107,62,38,0.16);color:var(--coffee-dark);box-shadow:none}
-    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+    .actions{text-align:right;margin-top:12px}
     .status{margin-top:6px;font-size:13px;color:var(--muted)}
-    .view{display:none}
-    .view.active{display:block}
-    .result-card{border-radius:14px;padding:18px;background:linear-gradient(180deg,var(--coffee-mid),var(--coffee-dark));color:white;box-shadow:var(--shadow-strong)}
-    .result-title{font-weight:900;font-size:18px;margin:0 0 6px}
-    .chip{background:rgba(255,255,255,0.12);padding:6px 8px;border-radius:999px;font-weight:700;font-size:12px;display:inline-block}
-    .list{margin-top:12px}
-    .item{background:var(--card);border-radius:12px;padding:12px;margin-top:8px;box-shadow:var(--shadow)}
-    .item h4{margin:0 0 4px;font-size:15px}
-    .item .sub{font-size:13px;color:#555}
+
+    /* 결과 영역 */
+    .result-wrap{
+      display:none;
+      justify-content:center;
+      margin-top:24px;
+    }
+
+    /* ========== 여기부터 결과 리포트 카드 스타일 ========== */
+    .result-container{
+      width:100%;
+      max-width:460px;
+      display:flex;
+      justify-content:center;
+    }
+    .result-card{
+      width:100%;
+      max-width:420px;
+      aspect-ratio:9/16;        /* 인스타 스토리 비율 */
+      background:var(--card-bg);
+      border-radius:16px;
+      border:1px solid var(--line);
+      box-shadow:0 10px 30px rgba(0,0,0,0.08);
+      padding:18px 18px 20px;
+      display:flex;
+      flex-direction:column;
+      color:var(--ink);
+      transition:background .2s ease, color .2s ease, border-color .2s ease;
+    }
+
+    .report-header{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding-bottom:10px;
+      border-bottom:1px solid var(--line);
+    }
+    .brand-logo{
+      width:42px;
+      height:auto;
+      flex-shrink:0;
+    }
+    .report-head-text{
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:rgba(0,0,0,0.6);
+    }
+    .report-head-title{
+      font-weight:700;
+      font-size:13px;
+    }
+
+    .main-box{
+      margin-top:12px;
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.9);
+    }
+    .main-box h1{
+      font-size:18px;
+      margin-bottom:4px;
+    }
+    .subject{
+      font-size:12px;
+      margin-bottom:2px;
+    }
+    .type-line{
+      font-size:13px;
+      margin-bottom:6px;
+    }
+    .type-line strong{
+      color:var(--accent);
+    }
+    .type-desc{
+      font-size:11px;
+      line-height:1.5;
+      color:rgba(0,0,0,0.78);
+    }
+
+    .cafe-box{
+      margin-top:10px;
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px dashed var(--accent);
+      background:rgba(255,250,240,0.9);
+      text-align:center;
+      flex-shrink:0;
+    }
+    .cafe-label{
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:rgba(0,0,0,0.55);
+      margin-bottom:6px;
+    }
+    .cafe-name{
+      min-height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      font-weight:800;
+      color:var(--ink);
+      margin-bottom:4px;
+    }
+    .cafe-note{
+      font-size:11px;
+      color:rgba(0,0,0,0.7);
+    }
+
+    .profile-box{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.9);
+      flex-shrink:0;
+    }
+    .profile-box h2{
+      font-size:12px;
+      margin-bottom:6px;
+    }
+    .profile-row{
+      display:flex;
+      align-items:center;
+      font-size:11px;
+      margin-bottom:4px;
+    }
+    .profile-row:last-child{margin-bottom:0}
+    .profile-label{
+      width:60px;
+      font-weight:600;
+    }
+    .profile-dots{
+      width:70px;
+      font-family:monospace;
+      font-size:11px;
+    }
+    .profile-text{
+      flex:1;
+      color:rgba(0,0,0,0.8);
+    }
+
+    .note-box{
+      margin-top:8px;
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px solid var(--line);
+      background:rgba(250,248,244,0.95);
+      flex:1;
+      display:flex;
+      flex-direction:column;
+    }
+    .note-box h2{
+      font-size:12px;
+      margin-bottom:4px;
+    }
+    .note-box p{
+      font-size:11px;
+      line-height:1.5;
+      color:rgba(0,0,0,0.82);
+    }
+
+    .report-footer{
+      margin-top:6px;
+      font-size:10px;
+      text-align:center;
+      color:rgba(0,0,0,0.55);
+    }
+
+    /* 타입별 테마 색상 (5종) */
+    .result-card.theme-sour{
+      --card-bg:#f4f2e8;
+      --accent:#e6a05e;
+      --ink:#593d2c;
+    }
+    .result-card.theme-nutty{
+      --card-bg:#f3ece4;
+      --accent:#c69c6d;
+      --ink:#4a3524;
+    }
+    .result-card.theme-bitter{
+      --card-bg:#efe9de;
+      --accent:#6b4530;
+      --ink:#2b1a12;
+    }
+    .result-card.theme-sourgoso{
+      --card-bg:#f3eee4;
+      --accent:#d4ad75;
+      --ink:#493626;
+    }
+    .result-card.theme-blend{
+      --card-bg:#f4efe7;
+      --accent:#a87c56;
+      --ink:#3a2a1c;
+    }
+
     @media(max-width:560px){
       header{align-items:flex-start}
-      .dot{width:32px;height:32px}
-      .likert-row{gap:10px;max-width:260px}
-      .choice-labels{font-size:12px}
+      .likert-row{grid-template-columns:1fr}
+      .likert-label{width:auto;text-align:left;opacity:.8}
+      button{width:100%}
+      .result-card{border-radius:12px}
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
 </head>
 <body>
-  <div class="wrap" id="pageWrap">
+  <div class="wrap">
+    <!-- 상단 로고 + 설명 -->
     <header>
       <img src="./logo.png" alt="커피 로고">
       <div>
-        <h1>나의피는커피로되어있어</h1>
-        <p class="lead">3가지 기준으로 선택하면, 취준생이 선택한 저가커피 위주의 데이터 중 당신에게 가장 어울리는 커피를 추천합니다.</p>
+        <h1>커피형 인간입니다.</h1>
+        <p class="lead">
+          '아침형 인간'이 하루의 시간 루틴을 정의하듯,<br>
+          '커피형 인간'은 자신의 감각 루틴을 해석한다.
+        </p>
       </div>
     </header>
 
-    <!-- ▶ 설문 화면 -->
-    <section id="view-quiz" class="view active">
-      <div class="card">
-        <div class="question">
-          <div class="q-title">1) 산미 — ‘시다’ 정도</div>
-          <div class="likert-block">
-            <div class="choice-labels"><span>좋아한다</span><span>싫어한다</span></div>
-            <div class="likert-row likert">
-              <label><input type="radio" name="sour" value="4"><div class="dot"><small>매우</small></div></label>
-              <label><input type="radio" name="sour" value="3"><div class="dot"><small>약간</small></div></label>
-              <label><input type="radio" name="sour" value="2"><div class="dot"><small>약간</small></div></label>
-              <label><input type="radio" name="sour" value="1"><div class="dot"><small>전혀</small></div></label>
-            </div>
+    <!-- 설문 카드 -->
+    <div class="card">
+      <div class="question">
+        <div class="q-title">1) 상큼함 — ‘시다’ 느낌을 얼마나 좋아하나요?</div>
+        <div class="likert-row">
+          <div class="likert-label">좋아한다</div>
+          <div class="likert">
+            <label><input type="radio" name="sour" value="4"><div class="dot"><small>매우</small></div></label>
+            <label><input type="radio" name="sour" value="3"><div class="dot"><small>약간</small></div></label>
+            <label><input type="radio" name="sour" value="2"><div class="dot"><small>보통</small></div></label>
+            <label><input type="radio" name="sour" value="1"><div class="dot"><small>전혀</small></div></label>
           </div>
-        </div>
-
-        <div class="question">
-          <div class="q-title">2) 고소함 — ‘고소하다’ 정도</div>
-          <div class="likert-block">
-            <div class="choice-labels"><span>좋아한다</span><span>싫어한다</span></div>
-            <div class="likert-row likert">
-              <label><input type="radio" name="nutty" value="4"><div class="dot"><small>매우</small></div></label>
-              <label><input type="radio" name="nutty" value="3"><div class="dot"><small>약간</small></div></label>
-              <label><input type="radio" name="nutty" value="2"><div class="dot"><small>약간</small></div></label>
-              <label><input type="radio" name="nutty" value="1"><div class="dot"><small>전혀</small></div></label>
-            </div>
-          </div>
-        </div>
-
-        <div class="question">
-          <div class="q-title">3) 쓴맛 — ‘쓰다’ 정도</div>
-          <div class="likert-block">
-            <div class="choice-labels"><span>좋아한다</span><span>싫어한다</span></div>
-            <div class="likert-row likert">
-              <label><input type="radio" name="bitter" value="4"><div class="dot"><small>매우</small></div></label>
-              <label><input type="radio" name="bitter" value="3"><div class="dot"><small>약간</small></div></label>
-              <label><input type="radio" name="bitter" value="2"><div class="dot"><small>약간</small></div></label>
-              <label><input type="radio" name="bitter" value="1"><div class="dot"><small>전혀</small></div></label>
-            </div>
-          </div>
-        </div>
-
-        <div class="status" id="status">저장된 커피 데이터 불러오는 중…</div>
-        <div class="actions">
-          <button type="button" id="btn-run">결과 보기</button>
+          <div class="likert-label">싫어한다</div>
         </div>
       </div>
-    </section>
 
-    <!-- ▶ 결과 화면 -->
-    <section id="view-result" class="view">
-      <div class="card">
-        <div id="resultCard" class="result-card">
-          <h2 class="result-title" id="resName">결과 이름</h2>
-          <p id="resDesc">당신에게 가장 어울리는 커피입니다.</p>
-          <div class="chip" id="metaNote"></div>
-        </div>
-
-        <div class="actions" style="margin-top:14px">
-          <button type="button" class="muted-btn" id="btn-back">다시 하기</button>
-          <button type="button" id="btn-save">JPEG로 저장</button>
-          <button type="button" id="btn-similar">비슷한 커피 Top3</button>
-        </div>
-
-        <div id="similarWrap" class="list" style="display:none">
-          <h3 style="margin:10px 0 6px">비슷한 대체제 Top3</h3>
-          <div id="similarList"></div>
+      <div class="question">
+        <div class="q-title">2) 고소함 — ‘고소하다’ 느낌을 얼마나 좋아하나요?</div>
+        <div class="likert-row">
+          <div class="likert-label">좋아한다</div>
+          <div class="likert">
+            <label><input type="radio" name="nutty" value="4"><div class="dot"><small>매우</small></div></label>
+            <label><input type="radio" name="nutty" value="3"><div class="dot"><small>약간</small></div></label>
+            <label><input type="radio" name="nutty" value="2"><div class="dot"><small>보통</small></div></label>
+            <label><input type="radio" name="nutty" value="1"><div class="dot"><small>전혀</small></div></label>
+          </div>
+          <div class="likert-label">싫어한다</div>
         </div>
       </div>
-    </section>
+
+      <div class="question">
+        <div class="q-title">3) 쌉사름함 — ‘쓰다’ 느낌을 얼마나 좋아하나요?</div>
+        <div class="likert-row">
+          <div class="likert-label">좋아한다</div>
+          <div class="likert">
+            <label><input type="radio" name="bitter" value="4"><div class="dot"><small>매우</small></div></label>
+            <label><input type="radio" name="bitter" value="3"><div class="dot"><small>약간</small></div></label>
+            <label><input type="radio" name="bitter" value="2"><div class="dot"><small>보통</small></div></label>
+            <label><input type="radio" name="bitter" value="1"><div class="dot"><small>전혀</small></div></label>
+          </div>
+          <div class="likert-label">싫어한다</div>
+        </div>
+      </div>
+
+      <div class="status" id="status">데이터 불러오는 중…</div>
+
+      <div class="actions">
+        <button type="button" onclick="calcResult()">결과 보기</button>
+      </div>
+    </div>
+
+    <!-- 결과 리포트 카드 -->
+    <div class="result-wrap" id="resultWrap">
+      <div class="result-container">
+        <div class="result-card theme-sour" id="resultCard">
+          <header class="report-header">
+            <img src="./logo.png" alt="커피 로고" class="brand-logo">
+            <div>
+              <div class="report-head-text">CAFFEINE GENOME PROJECT</div>
+              <div class="report-head-title">커피 유전자 검사 결과서</div>
+            </div>
+          </header>
+
+          <section class="main-box">
+            <h1>커피형 인간입니다.</h1>
+            <p class="subject">검사 대상: <span id="userName">당신</span>님</p>
+            <p class="type-line">검사 결과 유형: <strong id="resultType">상큼형</strong></p>
+            <p class="type-desc" id="typeDesc">
+              상큼한 산미와 밝은 향을 사랑하는,
+              새로움에 끌리는 커피형 인간입니다.
+            </p>
+          </section>
+
+          <section class="cafe-box">
+            <div class="cafe-label">RECOMMENDED CAFE</div>
+            <div class="cafe-name" id="bestCafeName">
+              <!-- JS로 카페 이름 들어감 -->
+            </div>
+            <p class="cafe-note">
+              현재까지 수집된 커피 데이터 기준,  
+              당신의 취향과 가장 잘 맞는 카페입니다.
+            </p>
+          </section>
+
+          <section class="profile-box">
+            <h2>맛 프로파일</h2>
+            <div class="profile-row">
+              <div class="profile-label">상큼함</div>
+              <div class="profile-dots" id="dotAcid">● ● ● ○</div>
+              <div class="profile-text" id="txtAcid">상큼함이 뚜렷한 편입니다.</div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-label">고소함</div>
+              <div class="profile-dots" id="dotNutty">● ● ○ ○</div>
+              <div class="profile-text" id="txtNutty">고소함이 적당한 편입니다.</div>
+            </div>
+            <div class="profile-row">
+              <div class="profile-label">쌉사름</div>
+              <div class="profile-dots" id="dotBitter">● ○ ○ ○</div>
+              <div class="profile-text" id="txtBitter">쌉사름함은 약한 편입니다.</div>
+            </div>
+          </section>
+
+          <section class="note-box">
+            <h2>해석 메모</h2>
+            <p id="noteText">
+              상큼형 커피를 선호하는 경향이 뚜렷합니다.  
+              달콤한 메뉴보다는 깔끔한 아이스 아메리카노,  
+              시트러스 향이 살짝 느껴지는 원두와 잘 어울립니다.
+            </p>
+          </section>
+
+          <div class="report-footer">
+            본 결과는 ‘커피형 인간입니다.’ 프로젝트의 취향 데이터를 기반으로 산출된 비공식 검사입니다.<br>
+            Caffeine Genome Project · coffeehuman.kr
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    const GITHUB_JSON_URL = './coffee-data.json?v=8';
+    // JSON 파일은 index.html과 같은 폴더에 있어야 함
+    const GITHUB_JSON_URL = './coffee-data.json?v=4';
+
     let coffeeList = [];
     let lastFetched = null;
     const statusEl = document.getElementById('status');
-    const viewQuiz = document.getElementById('view-quiz');
-    const viewResult = document.getElementById('view-result');
 
     async function fetchCoffeeData() {
-      statusEl.textContent = '저장된 커피 데이터 불러오는 중…';
+      statusEl.textContent = '데이터 불러오는 중…';
       try {
         const res = await fetch(GITHUB_JSON_URL, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const list = await res.json();
+        if (!Array.isArray(list)) throw new Error('JSON 구조 오류');
         coffeeList = list;
         lastFetched = new Date();
         statusEl.textContent = `저장된 커피 데이터 총 ${coffeeList.length}개`;
       } catch (err) {
-        statusEl.textContent = '⚠️ 불러오기 실패: ' + err.message;
+        statusEl.textContent = '⚠️ 데이터 불러오기 실패: ' + err.message;
       }
     }
 
-    const getScore = n => Number(document.querySelector(`input[name="${n}"]:checked`)?.value);
-    const distance = (a,b)=>Math.abs(a[0]-b[0])+Math.abs(a[1]-b[1])+Math.abs(a[2]-b[2]);
+    function getScore(name){
+      return Number(document.querySelector(`input[name="${name}"]:checked`)?.value);
+    }
 
-    function showResult(){
-      const s=getScore('sour'), n=getScore('nutty'), b=getScore('bitter');
+    // 타입별 설정 (문구 + 테마 클래스)
+    const TYPE_CONFIG = {
+      sour: {
+        label: "상큼형",
+        theme: "theme-sour",
+        desc: "상큼한 산미와 밝은 향을 사랑하는, 새로움에 끌리는 커피형 인간입니다.",
+        note: "상큼한 산미가 드러나는 라이트 로스팅 원두와 잘 어울립니다. 시트러스 계열 향을 가진 아메리카노를 특히 좋아할 가능성이 높습니다."
+      },
+      nutty: {
+        label: "고소형",
+        theme: "theme-nutty",
+        desc: "고소하고 부드러운 향을 선호하는, 안정적인 루틴형 커피 인간입니다.",
+        note: "너트 향과 구수한 풍미가 있는 원두와 잘 맞습니다. 라떼나 고소한 아메리카노를 자주 찾는 스타일입니다."
+      },
+      bitter: {
+        label: "쌉사름형",
+        theme: "theme-bitter",
+        desc: "묵직하고 진한 맛을 좋아하는, 집중력 높은 커피형 인간입니다.",
+        note: "다크 로스팅, 에스프레소 베이스의 진한 아메리카노와 잘 어울립니다. 작업 전 강한 한 잔을 찾는 타입입니다."
+      },
+      sourgoso: {
+        label: "복합 상큼고소형",
+        theme: "theme-sourgoso",
+        desc: "상큼함과 고소함이 함께 느껴지는, 밸런스형 커피 인간입니다.",
+        note: "상큼한 첫인상 뒤에 고소한 여운이 남는 블렌드와 잘 맞습니다. 메뉴 선택 폭이 넓은 편입니다."
+      },
+      blend: {
+        label: "복합 블렌드형",
+        theme: "theme-blend",
+        desc: "어느 한쪽으로 치우치지 않은, 조화로운 복합 풍미를 선호하는 커피형 인간입니다.",
+        note: "여러 맛이 겹겹이 쌓인 블렌드 커피와 잘 어울립니다. 상황에 따라 다양한 카페를 즐길 준비가 된 타입입니다."
+      }
+    };
+
+    function makeDots(score){
+      const filled = "● ".repeat(score).trimEnd();
+      const empty = "○ ".repeat(4-score).trimEnd();
+      return (filled + " " + empty).trim();
+    }
+
+    // 점수로 타입 판정
+    function classifyType(s, n, b){
+      const max = Math.max(s,n,b);
+
+      // 한 맛이 확실히 크면 단일형
+      if (s >= max && s >= n+1 && s >= b+1) return 'sour';
+      if (n >= max && n >= s+1 && n >= b+1) return 'nutty';
+      if (b >= max && b >= s+1 && b >= n+1) return 'bitter';
+
+      // 상큼+고소가 비슷하게 높은 경우
+      if (Math.abs(s-n) <= 1 && s >= 2 && n >= 2) return 'sourgoso';
+
+      // 나머지는 복합 블렌드형
+      return 'blend';
+    }
+
+    function renderResult(bestCoffee, s, n, b){
+      const typeKey = classifyType(s,n,b);
+      const config = TYPE_CONFIG[typeKey];
+      const card = document.getElementById("resultCard");
+
+      // 테마 적용
+      card.className = "result-card " + config.theme;
+
+      // 텍스트 채우기
+      document.getElementById("resultType").textContent = config.label;
+      document.getElementById("typeDesc").textContent  = config.desc;
+      document.getElementById("bestCafeName").textContent = bestCoffee.name;
+
+      // 도트(●○)
+      document.getElementById("dotAcid").textContent   = makeDots(s);
+      document.getElementById("dotNutty").textContent  = makeDots(n);
+      document.getElementById("dotBitter").textContent = makeDots(b);
+
+      // 숫자에 따른 간단 설명
+      document.getElementById("txtAcid").textContent =
+        s >= 3 ? "상큼함이 뚜렷한 편입니다." :
+        s === 2 ? "상큼함이 은은하게 느껴집니다." :
+                  "상큼함은 거의 느끼지 못합니다.";
+
+      document.getElementById("txtNutty").textContent =
+        n >= 3 ? "고소함이 확실히 느껴집니다." :
+        n === 2 ? "고소함이 적당한 편입니다." :
+                  "고소함은 약한 편입니다.";
+
+      document.getElementById("txtBitter").textContent =
+        b >= 3 ? "쌉사름함이 강하게 느껴집니다." :
+        b === 2 ? "적당히 쌉사름한 편입니다." :
+                  "쌉사름함은 약한 편입니다.";
+
+      document.getElementById("noteText").textContent = config.note;
+
+      // 결과 영역 보여주기 + 스크롤
+      const wrap = document.getElementById('resultWrap');
+      wrap.style.display = 'flex';
+      wrap.scrollIntoView({behavior:'smooth'});
+    }
+
+    function calcResult(){
+      const s = getScore('sour'), n = getScore('nutty'), b = getScore('bitter');
       if(!s||!n||!b){alert('모든 문항을 선택하세요.');return;}
       if(!coffeeList.length){alert('데이터가 없습니다.');return;}
+
       let best=null,bestScore=Infinity;
       coffeeList.forEach(c=>{
-        const d=distance([s,n,b],[c.acidity,c.nutty,c.bitter]);
+        const d = Math.abs(s-c.acidity)+Math.abs(n-c.nutty)+Math.abs(b-c.bitter);
         if(d<bestScore){bestScore=d;best=c;}
       });
-      document.getElementById('resName').textContent=best.name;
-      document.getElementById('resDesc').textContent=`산미 ${best.acidity}, 고소함 ${best.nutty}, 쓴맛 ${best.bitter}`;
-      document.getElementById('metaNote').textContent=`데이터 기준: ${lastFetched?.toLocaleString('ko-KR')}`;
-      viewQuiz.classList.remove('active');
-      viewResult.classList.add('active');
-      window.__lastChoice={s,n,b,best};
-      window.scrollTo({top:0,behavior:'smooth'});
+
+      renderResult(best, s, n, b);
     }
 
-    // 📸 페이지 전체 캡처
-    async function saveResultAsJPEG(){
-      if(!window.html2canvas){alert('이미지 저장 라이브러리를 불러오지 못했습니다.');return;}
-      const full=document.getElementById('pageWrap');
-      const canvas=await html2canvas(full,{scale:2,backgroundColor:'#f5efe9',useCORS:true});
-      const link=document.createElement('a');
-      link.href=canvas.toDataURL('image/jpeg',0.95);
-      link.download=`coffee-result-${Date.now()}.jpg`;
-      link.click();
-    }
-
-    function showSimilarList(){
-      const {best}=window.__lastChoice||{};
-      if(!best){alert('먼저 결과를 확인하세요.');return;}
-      const base=[best.acidity,best.nutty,best.bitter];
-      const ranked=coffeeList.filter(c=>c.name!==best.name)
-        .map(c=>({c,d:distance(base,[c.acidity,c.nutty,c.bitter])}))
-        .sort((a,b)=>a.d-b.d).slice(0,3);
-      const list=document.getElementById('similarList');
-      list.innerHTML='';
-      ranked.forEach(({c,d})=>{
-        const el=document.createElement('div');
-        el.className='item';
-        el.innerHTML=`<h4>${c.name}</h4><div class="sub">산미 ${c.acidity}, 고소함 ${c.nutty}, 쓴맛 ${c.bitter} · 유사도 거리 ${d}</div>`;
-        list.appendChild(el);
-      });
-      document.getElementById('similarWrap').style.display='block';
-    }
-
-    document.getElementById('btn-run').onclick=showResult;
-    document.getElementById('btn-save').onclick=saveResultAsJPEG;
-    document.getElementById('btn-similar').onclick=showSimilarList;
-    document.getElementById('btn-back').onclick=()=>{viewResult.classList.remove('active');viewQuiz.classList.add('active');};
     fetchCoffeeData();
   </script>
 </body>
