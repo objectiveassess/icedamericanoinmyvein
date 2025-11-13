@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>커피형 인간입니다 — 본인의 혈액 속 커피 유전자를 분석해드립니다.</title>
 
-  <!-- html2canvas: 결과 카드 저장용 -->
+  <!-- 결과 카드 캡쳐용 라이브러리 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
   <style>
@@ -25,11 +25,10 @@
       --line:rgba(0,0,0,0.12);
       --accent:#a67856;
     }
-
     *{box-sizing:border-box;margin:0;padding:0}
 
     body{
-      font-family:'Noto Sans KR',system-ui,-apple-system;
+      font-family:"Noto Sans KR",system-ui,-apple-system;
       background:var(--bg);
       color:var(--coffee-dark);
       padding:max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
@@ -44,7 +43,7 @@
       border-radius:var(--radius);
     }
 
-    /* 헤더 */
+    /* 헤더 영역 */
     header{
       display:flex;
       align-items:center;
@@ -99,7 +98,6 @@
       cursor:pointer;
     }
     .likert input{display:none}
-
     .dot{
       width:var(--tap);
       height:var(--tap);
@@ -110,48 +108,34 @@
       justify-content:center;
       transition:all .18s;
     }
-    .likert input:checked+.dot{
+    .dot small{font-size:12px;color:var(--muted)}
+    .likert input:checked + .dot{
       background:var(--coffee-mid);
       border-color:var(--coffee-mid);
       box-shadow:0 6px 18px rgba(0,0,0,0.08);
     }
-    .dot small{font-size:12px;color:var(--muted)}
-    .likert input:checked+.dot small{color:white}
+    .likert input:checked + .dot small{color:#fff}
 
     button{
+      background:var(--coffee-dark);
       border:none;
+      color:white;
+      padding:12px 16px;
+      border-radius:12px;
       cursor:pointer;
       font-weight:800;
       font-size:14px;
-      border-radius:12px;
-    }
-    .actions{
-      text-align:right;
-      margin-top:12px;
-    }
-    .actions button{
-      background:var(--coffee-dark);
-      color:white;
-      padding:12px 16px;
       box-shadow:0 6px 14px rgba(107,62,38,0.18);
     }
+    .actions{text-align:right;margin-top:12px}
+    .status{margin-top:6px;font-size:13px;color:var(--muted)}
 
-    .status{
-      margin-top:6px;
-      font-size:13px;
-      color:var(--muted);
-    }
+    /* ===== 결과 카드 디자인 (네가 준 그대로) ===== */
 
-    /* ==============================
-       결과 영역 + 결과 카드 디자인
-       ============================== */
     .result-wrap{
       display:none;
       justify-content:center;
       margin-top:28px;
-      flex-direction:column;
-      align-items:center;
-      gap:10px;
     }
 
     .result-container{
@@ -162,7 +146,7 @@
     }
     .result-card{
       width:100%;
-      aspect-ratio:9/16;        /* 인스타 스토리 비율 */
+      aspect-ratio:9/16;   /* 인스타 스토리 비율 */
       background:var(--card-bg);
       border-radius:16px;
       border:1px solid var(--line);
@@ -173,7 +157,6 @@
       color:var(--ink);
     }
 
-    /* 헤더 */
     .report-header{
       display:flex;
       align-items:center;
@@ -197,7 +180,6 @@
       font-size:13px;
     }
 
-    /* 메인 박스 */
     .main-box{
       margin-top:12px;
       padding:12px 14px;
@@ -217,16 +199,13 @@
       font-size:13px;
       margin-bottom:6px;
     }
-    .type-line strong{
-      color:var(--accent);
-    }
+    .type-line strong{color:var(--accent);}
     .type-desc{
       font-size:11px;
       line-height:1.5;
       color:rgba(0,0,0,0.78);
     }
 
-    /* 추천 카페 박스 */
     .cafe-box{
       margin-top:10px;
       padding:12px 14px;
@@ -258,7 +237,6 @@
       color:rgba(0,0,0,0.7);
     }
 
-    /* 맛 프로파일 */
     .profile-box{
       margin-top:10px;
       padding:10px 12px;
@@ -292,7 +270,6 @@
       color:rgba(0,0,0,0.8);
     }
 
-    /* 해석 메모 */
     .note-box{
       margin-top:8px;
       padding:8px 10px;
@@ -313,7 +290,28 @@
       color:rgba(0,0,0,0.82);
     }
 
-    /* 푸터 */
+    /* TOP3 영역 (카드 안) */
+    .top3-box{
+      margin-top:8px;
+      padding:8px 10px;
+      border-radius:8px;
+      border:1px dashed var(--line);
+      background:rgba(255,255,255,0.9);
+      font-size:11px;
+      display:none; /* 기본은 숨김, 버튼으로 토글 */
+    }
+    .top3-box h3{
+      font-size:11px;
+      margin-bottom:4px;
+    }
+    .top3-box ul{
+      margin-left:16px;
+      margin-top:2px;
+    }
+    .top3-box li{
+      margin-bottom:2px;
+    }
+
     .report-footer{
       margin-top:6px;
       font-size:10px;
@@ -321,74 +319,42 @@
       color:rgba(0,0,0,0.55);
     }
 
-    /* 타입별 테마 색상 (5종) */
-    .theme-sour{ --card-bg:#f4f2e8; --accent:#e6a05e; --ink:#593d2c; }
-    .theme-nutty{ --card-bg:#f3ece4; --accent:#c69c6d; --ink:#4a3524; }
-    .theme-bitter{ --card-bg:#efe9de; --accent:#6b4530; --ink:#2b1a12; }
-    .theme-sourgoso{ --card-bg:#f3eee4; --accent:#d4ad75; --ink:#493626; }
-    .theme-blend{ --card-bg:#f4efe7; --accent:#a87c56; --ink:#3a2a1c; }
-
-    /* 결과 하단 버튼/Top3 */
+    /* 결과 하단 버튼들 */
     .result-actions{
-      width:100%;
+      display:none;
       max-width:420px;
+      margin:12px auto 0;
       display:flex;
       flex-direction:column;
       gap:8px;
     }
-    .save-btn,
-    .top3-btn,
-    .retry-btn{
+    .result-actions button{
       width:100%;
-      padding:10px 12px;
       font-size:13px;
       border-radius:10px;
-      color:white;
-      box-shadow:0 4px 10px rgba(0,0,0,0.08);
-    }
-    .save-btn{background:#6b3e26;}
-    .top3-btn{background:#a67856;}
-    .retry-btn{background:#b39b8a;}
-
-    .top3-box{
-      margin-top:4px;
-      background:rgba(255,255,255,0.9);
-      border:1px solid var(--line);
       padding:10px 12px;
-      border-radius:10px;
-      font-size:12px;
-      display:none; /* 처음에는 숨김 */
     }
-    .top3-box h3{
-      margin-bottom:4px;
-      font-size:12px;
-    }
-    .top3-box ul{
-      padding-left:16px;
-    }
+    #toggleTop3Btn{background:#8a5b3a;}
+    #saveImageBtn{background:#6b3e26;}
+    #retryBtn{background:#a67856;}
 
-    @media(max-width:560px){
+    @media (max-width:560px){
       header{align-items:flex-start}
       .likert-row{grid-template-columns:1fr}
       .likert-label{width:auto;text-align:left;opacity:.8}
-      .actions button{width:100%}
+      button{width:100%}
       .result-card{border-radius:12px}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-
-    <!-- 상단 헤더 -->
+    <!-- 헤더 -->
     <header>
-      <!-- 🔺 실제 파일명이 logo.png인지 꼭 확인! -->
-      <img src="./logo.PNG" alt="로고">
+      <img src="./logo.png" alt="커피 로고">
       <div>
         <h1>커피형 인간입니다.</h1>
-        <p class="lead">
-          본인의 혈액 속 커피 유전자를 분석해,<br>
-          당신에게 꼭 맞는 커피 맛과 카페를 찾아드립니다.
-        </p>
+        <p class="lead">본인의 혈액 속 커피 유전자를 분석해드립니다.</p>
       </div>
     </header>
 
@@ -443,15 +409,14 @@
       </div>
     </div>
 
-    <!-- 결과 영역 -->
+    <!-- 결과 카드 -->
     <div class="result-wrap" id="resultWrap">
       <div class="result-container">
-        <div class="result-card theme-sour" id="resultCard">
-
+        <div class="result-card" id="resultCard">
           <header class="report-header">
-            <img src="./logo.png" class="brand-logo" alt="로고">
+            <img src="./logo.png" alt="커피 로고" class="brand-logo">
             <div>
-              <div class="report-head-text">COFFEINE GENOME PROJECT</div>
+              <div class="report-head-text">CAFFEINE GENOME PROJECT</div>
               <div class="report-head-title">커피 유전자 검사 결과서</div>
             </div>
           </header>
@@ -499,32 +464,34 @@
             <p id="noteText"></p>
           </section>
 
+          <!-- TOP3 영역: 기본은 숨김, 버튼으로 토글 -->
+          <section class="top3-box" id="top3Box">
+            <h3>비슷한 커피 TOP3</h3>
+            <ul id="top3List"></ul>
+          </section>
+
           <div class="report-footer">
             본 결과는 ‘커피형 인간입니다.’ 프로젝트의 취향 데이터를 기반으로 산출된 비공식 검사입니다.<br>
             Caffeine Genome Project · coffeehuman.kr
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- 카드 아래 버튼/Top3 영역 -->
-      <div class="result-actions">
-        <button class="save-btn" id="saveImageBtn">📱 결과 이미지 저장하기</button>
-        <button class="top3-btn" id="top3Btn" onclick="toggleTop3()">☕ 비슷한 커피 TOP3 보기</button>
-        <div class="top3-box" id="top3Box">
-          <h3>비슷한 커피 TOP3</h3>
-          <ul id="top3List"></ul>
-        </div>
-        <button class="retry-btn" onclick="retry()">🔄 다시 검사하기</button>
-      </div>
+    <!-- 결과 하단 버튼들 -->
+    <div class="result-actions" id="resultActions">
+      <button id="toggleTop3Btn">☕ 비슷한 커피 TOP3 보기</button>
+      <button id="saveImageBtn">📱 결과 이미지 저장하기</button>
+      <button id="retryBtn" onclick="retry()">🔄 다시 검사하기</button>
     </div>
 
   </div>
 
   <script>
-    // JSON 파일 경로 (index.html과 같은 폴더)
+    /* ===== 데이터 로딩 ===== */
     const JSON_URL = './coffee-data.json?v=10';
-
     let coffeeList = [];
+    let lastFetched = null;
     const statusEl = document.getElementById('status');
 
     async function fetchCoffeeData(){
@@ -532,45 +499,60 @@
         const res = await fetch(JSON_URL,{cache:'no-store'});
         const list = await res.json();
         coffeeList = list;
+        lastFetched = new Date();
         statusEl.textContent = `저장된 커피 데이터 총 ${list.length}개`;
       }catch(e){
-        statusEl.textContent = '데이터 로드 실패';
+        statusEl.textContent = '⚠️ 데이터 로드 실패';
       }
     }
     fetchCoffeeData();
 
+    /* ===== 설문 값 가져오기 ===== */
     function getScore(name){
       return Number(document.querySelector(`input[name="${name}"]:checked`)?.value);
     }
 
-    // 타입별 설정
+    /* ===== 타입 분류 로직 ===== */
     const TYPE_CONFIG = {
-      sour:{label:"상큼형",theme:"theme-sour",
-        desc:"상큼한 향과 밝은 산미를 선호하는 커피형 인간입니다.",
-        note:"라이트 로스팅, 시트러스 계열 산미가 있는 아메리카노와 잘 어울립니다."},
-      nutty:{label:"고소형",theme:"theme-nutty",
-        desc:"구수하고 고소한 풍미를 좋아하는 안정형 커피 인간입니다.",
-        note:"너트 향과 곡물 향이 나는 블렌드, 라떼 계열과 특히 잘 맞습니다."},
-      bitter:{label:"쌉사름형",theme:"theme-bitter",
-        desc:"진하고 묵직한 쌉사름함을 즐기는 집중형 커피 인간입니다.",
-        note:"다크 로스팅, 샷이 진한 아메리카노나 롱블랙 스타일을 추천합니다."},
-      sourgoso:{label:"복합 상큼고소형",theme:"theme-sourgoso",
-        desc:"상큼함과 고소함이 함께 느껴지는 밸런스형 커피 인간입니다.",
-        note:"산미와 고소함이 함께 살아 있는 블렌드, 필터커피에도 잘 어울립니다."},
-      blend:{label:"복합 블렌드형",theme:"theme-blend",
-        desc:"어느 한쪽으로 치우치지 않은 조화로운 맛을 선호하는 커피형 인간입니다.",
-        note:"상황과 기분에 따라 다양한 카페와 메뉴를 즐길 수 있는 타입입니다."}
+      sour:{
+        label:"상큼형",
+        desc:"상큼한 산미와 밝은 향을 사랑하는, 새로움에 끌리는 커피형 인간입니다.",
+        note:"상큼한 산미가 드러나는 라이트 로스팅 원두와 잘 어울립니다. 시트러스 계열 향이 살짝 느껴지는 아메리카노를 특히 좋아할 가능성이 높습니다."
+      },
+      nutty:{
+        label:"고소형",
+        desc:"고소하고 부드러운 향을 선호하는, 안정적인 루틴형 커피 인간입니다.",
+        note:"구수한 풍미와 너트 향이 있는 원두와 잘 맞습니다. 라떼나 고소한 아메리카노를 자주 찾는 타입입니다."
+      },
+      bitter:{
+        label:"쌉사름형",
+        desc:"묵직하고 진한 맛을 좋아하는, 집중력 높은 커피형 인간입니다.",
+        note:"다크 로스팅, 에스프레소 베이스의 진한 아메리카노와 잘 어울립니다. 공부나 작업 전에 강한 한 잔을 찾는 스타일입니다."
+      },
+      sourgoso:{
+        label:"복합 상큼고소형",
+        desc:"상큼함과 고소함이 함께 느껴지는, 밸런스형 커피 인간입니다.",
+        note:"상큼한 첫인상 뒤에 고소한 여운이 남는 블렌드와 잘 맞습니다. 메뉴 선택 폭이 넓은 편입니다."
+      },
+      blend:{
+        label:"복합 블렌드형",
+        desc:"어느 한쪽으로 치우치지 않은, 조화로운 복합 풍미를 선호하는 커피형 인간입니다.",
+        note:"여러 맛이 겹겹이 쌓인 블렌드 커피와 잘 어울립니다. 상황에 따라 다양한 카페를 즐길 준비가 된 타입입니다."
+      }
     };
 
     function classifyType(s,n,b){
       const max = Math.max(s,n,b);
 
+      // 하나가 확실히 크면 단일형
       if (s >= max && s >= n+1 && s >= b+1) return 'sour';
       if (n >= max && n >= s+1 && n >= b+1) return 'nutty';
       if (b >= max && b >= s+1 && b >= n+1) return 'bitter';
 
-      if (Math.abs(s-n)<=1 && s>=2 && n>=2) return 'sourgoso';
+      // 상큼+고소 비슷하게 높은 경우
+      if (Math.abs(s-n) <= 1 && s >= 2 && n >= 2) return 'sourgoso';
 
+      // 나머지: 블렌드형
       return 'blend';
     }
 
@@ -578,59 +560,72 @@
       return ("● ".repeat(score) + "○ ".repeat(4-score)).trim();
     }
 
+    /* ===== TOP3 계산 ===== */
     function renderTop3(s,n,b){
-      const ranked = coffeeList
-        .map(c=>({
-          name:c.name,
-          score:Math.abs(s-c.acidity)+Math.abs(n-c.nutty)+Math.abs(b-c.bitter)
-        }))
-        .sort((a,b)=>a.score-b.score)
-        .slice(0,3);
+      const ranked = coffeeList.map(c=>({
+        name:c.name,
+        score:Math.abs(s-c.acidity)+Math.abs(n-c.nutty)+Math.abs(b-c.bitter)
+      }))
+      .sort((a,b)=>a.score-b.score)
+      .slice(0,3);
 
-      document.getElementById("top3List").innerHTML =
-        ranked.map((c,i)=>`<li><strong>${i+1}위</strong> — ${c.name}</li>`).join("");
+      const listEl = document.getElementById("top3List");
+      listEl.innerHTML = ranked
+        .map((c,i)=>`<li><strong>${i+1}위</strong> — ${c.name}</li>`)
+        .join("");
     }
 
+    /* ===== 결과 렌더링 ===== */
     function renderResult(best, s, n, b){
       const typeKey = classifyType(s,n,b);
       const config = TYPE_CONFIG[typeKey];
       const card = document.getElementById("resultCard");
 
-      // 카드 테마 클래스 적용
-      card.className = "result-card " + config.theme;
+      // 카드 기본 클래스 그대로, 색 테마는 변수만 사용하니 class는 하나면 됨
 
       document.getElementById("resultType").textContent = config.label;
       document.getElementById("typeDesc").textContent  = config.desc;
       document.getElementById("bestCafeName").textContent = best.name;
-      document.getElementById("noteText").textContent = config.note;
+      document.getElementById("noteText").textContent  = config.note;
 
       document.getElementById("dotAcid").textContent   = makeDots(s);
       document.getElementById("dotNutty").textContent  = makeDots(n);
       document.getElementById("dotBitter").textContent = makeDots(b);
 
       document.getElementById("txtAcid").textContent =
-        s>=3?"상큼함이 뚜렷한 편입니다.":s===2?"상큼함이 적당한 편입니다.":"상큼함은 약한 편입니다.";
+        s>=3 ? "상큼함이 뚜렷한 편입니다." :
+        s===2 ? "상큼함이 은은하게 느껴집니다." :
+                "상큼함은 거의 느끼지 못합니다.";
+
       document.getElementById("txtNutty").textContent =
-        n>=3?"고소함이 확실히 느껴집니다.":n===2?"고소함이 적당한 편입니다.":"고소함은 약한 편입니다.";
+        n>=3 ? "고소함이 확실히 느껴집니다." :
+        n===2 ? "고소함이 적당한 편입니다." :
+                "고소함은 약한 편입니다.";
+
       document.getElementById("txtBitter").textContent =
-        b>=3?"쌉사름함이 강하게 느껴집니다.":b===2?"적당히 쌉사름한 편입니다.":"쌉사름함은 약한 편입니다.";
+        b>=3 ? "쌉사름함이 강하게 느껴집니다." :
+        b===2 ? "적당히 쌉사름한 편입니다." :
+                "쌉사름함은 약한 편입니다.";
 
-      // TOP3 데이터 미리 계산해두기 (박스는 안 보여줌)
+      // TOP3 내용 미리 계산(보여줄지는 토글로)
       renderTop3(s,n,b);
-      document.getElementById("top3Box").style.display = "none";
-      document.getElementById("top3Btn").textContent = "☕ 비슷한 커피 TOP3 보기";
 
-      const wrap = document.getElementById("resultWrap");
-      wrap.style.display = "flex";
-      wrap.scrollIntoView({behavior:"smooth"});
+      // 결과 카드 & 버튼 보이기
+      document.getElementById("resultWrap").style.display = "flex";
+      document.getElementById("resultActions").style.display = "flex";
+      document.getElementById("top3Box").style.display = "none";
+      document.getElementById("toggleTop3Btn").textContent = "☕ 비슷한 커피 TOP3 보기";
+
+      document.getElementById("resultWrap").scrollIntoView({behavior:"smooth"});
     }
 
+    /* ===== 결과 계산 버튼 ===== */
     function calcResult(){
       const s = getScore('sour');
       const n = getScore('nutty');
       const b = getScore('bitter');
 
-      if(!s||!n||!b){
+      if(!s || !n || !b){
         alert("모든 항목을 선택하세요.");
         return;
       }
@@ -639,46 +634,50 @@
         return;
       }
 
-      let best=null, bestScore=Infinity;
+      let best = null;
+      let bestScore = Infinity;
 
       coffeeList.forEach(c=>{
         const dist = Math.abs(s-c.acidity)+Math.abs(n-c.nutty)+Math.abs(b-c.bitter);
-        if(dist<bestScore){
-          bestScore=dist;
-          best=c;
+        if(dist < bestScore){
+          bestScore = dist;
+          best = c;
         }
       });
 
       renderResult(best, s, n, b);
     }
 
-    // TOP3 보기/숨기기
-    function toggleTop3(){
-      const box = document.getElementById("top3Box");
-      const btn = document.getElementById("top3Btn");
-      const isVisible = box.style.display === "block";
+    /* ===== TOP3 토글 버튼 ===== */
+    const toggleBtn = document.getElementById("toggleTop3Btn");
+    const top3Box = document.getElementById("top3Box");
 
-      box.style.display = isVisible ? "none" : "block";
-      btn.textContent = isVisible
-        ? "☕ 비슷한 커피 TOP3 보기"
-        : "☕ 비슷한 커피 TOP3 숨기기";
-    }
+    toggleBtn.addEventListener("click", ()=>{
+      if(top3Box.style.display === "none" || top3Box.style.display === ""){
+        top3Box.style.display = "block";
+        toggleBtn.textContent = "☕ 비슷한 커피 TOP3 숨기기";
+      }else{
+        top3Box.style.display = "none";
+        toggleBtn.textContent = "☕ 비슷한 커피 TOP3 보기";
+      }
+    });
 
-    // 결과 이미지 저장 (카드 영역만)
+    /* ===== 결과 이미지 저장 ===== */
     document.getElementById("saveImageBtn").addEventListener("click", ()=>{
       const target = document.getElementById("resultCard");
       html2canvas(target,{scale:2}).then(canvas=>{
-        const link=document.createElement("a");
-        link.download="coffee-result.jpg";
-        link.href=canvas.toDataURL("image/jpeg",0.9);
+        const link = document.createElement("a");
+        link.download = "coffee-result.jpg";
+        link.href = canvas.toDataURL("image/jpeg",0.9);
         link.click();
       });
     });
 
-    // 다시 검사하기
+    /* ===== 다시 검사하기 ===== */
     function retry(){
       document.querySelectorAll("input[type=radio]").forEach(el=>el.checked=false);
-      document.getElementById("resultWrap").style.display="none";
+      document.getElementById("resultWrap").style.display = "none";
+      document.getElementById("resultActions").style.display = "none";
       window.scrollTo({top:0,behavior:"smooth"});
     }
   </script>
