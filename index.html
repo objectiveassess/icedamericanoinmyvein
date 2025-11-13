@@ -71,24 +71,27 @@
     .question{margin-bottom:22px}
     .q-title{font-weight:800;font-size:15px;margin-bottom:10px}
 
+    /* ✅ 리커트 영역: 화면 폭에 따라 자동 조절 */
     .likert-row{
-      display:grid;
-      grid-template-columns:auto 1fr auto;
+      display:flex;
       align-items:center;
-      gap:12px;
+      gap:8px;
     }
     .likert-label{
-      width:80px;
+      flex:0 0 auto;
       text-align:center;
       color:var(--coffee-dark);
       font-weight:700;
-      font-size:13px;
+      font-size:clamp(11px,3vw,13px);
+      white-space:nowrap; /* 두 글자(좋아함/싫어함) 줄바꿈 방지 */
     }
     .likert{
       display:flex;
-      gap:18px;
-      justify-content:space-between;
       flex:1;
+      min-width:0;
+      justify-content:space-between;
+      gap:clamp(8px,2.8vw,18px);
+      flex-wrap:nowrap;
     }
     .likert label{
       display:flex;
@@ -96,11 +99,13 @@
       align-items:center;
       gap:6px;
       cursor:pointer;
+      flex:0 0 auto;
     }
     .likert input{display:none}
     .dot{
-      width:var(--tap);
-      height:var(--tap);
+      /* 화면 폭에 따라 자동 크기 조절 */
+      width:clamp(38px,12vw,48px);
+      height:clamp(38px,12vw,48px);
       border-radius:50%;
       border:3px solid rgba(107,62,38,0.25);
       display:flex;
@@ -108,7 +113,10 @@
       justify-content:center;
       transition:all .18s;
     }
-    .dot small{font-size:12px;color:var(--muted)}
+    .dot small{
+      font-size:clamp(11px,2.8vw,12px);
+      color:var(--muted);
+    }
     .likert input:checked + .dot{
       background:var(--coffee-mid);
       border-color:var(--coffee-mid);
@@ -146,8 +154,9 @@
     }
     .result-card{
       width:100%;
-      max-width:420px;
-      aspect-ratio:9/16;   /* 인스타 스토리 비율 */
+      /* ❌ 9:16 비율 제거하고, 화면 높도에 맞게 */
+      max-height:calc(100vh - 40px);
+      overflow:auto;
       background:var(--card-bg);
       border-radius:16px;
       border:1px solid var(--line);
@@ -156,7 +165,6 @@
       display:flex;
       flex-direction:column;
       color:var(--ink);
-      transform-origin:top center;   /* 화면 높이에 맞춰 축소할 때 기준점 */
     }
 
     .report-header{
@@ -323,7 +331,7 @@
 
     /* 결과 하단 버튼들 */
     .result-actions{
-      display:none;
+      display:none;           /* 초기는 숨김 */
       max-width:420px;
       margin:12px auto 0;
       flex-direction:column;
@@ -339,59 +347,12 @@
     #saveImageBtn{background:#6b3e26;}
     #retryBtn{background:#a67856;}
 
-    /* ===== 모바일(세로 좁은 화면) 최적화 ===== */
-    @media (max-width:560px){
+    /* 작은 화면일 때 살짝 여백 줄이기 */
+    @media (max-width:480px){
+      .wrap{padding:18px;}
       header{align-items:flex-start}
-
-      /* 질문 블록 높이 살짝 줄이기 */
-      .question{margin-bottom:16px;}
-      .q-title{font-size:14px;margin-bottom:8px;}
-
-      /* 좋아함 / 싫어함 같은 줄 유지하면서 폭 줄이기 */
-      .likert-row{
-        grid-template-columns:auto 1fr auto; /* 3열 유지 */
-        column-gap:6px;
-      }
-      .likert-label{
-        width:60px;
-        font-size:11px;
-      }
-      .likert{
-        gap:8px;
-        justify-content:center;
-        flex-wrap:nowrap;
-      }
-      .dot{
-        width:36px;
-        height:36px;
-        border-width:2px;
-      }
-      .dot small{font-size:11px;}
-
-      .result-card{
-        border-radius:12px;
-        padding:14px 14px 16px;
-      }
-      .main-box,
-      .cafe-box,
-      .profile-box,
-      .note-box,
-      .top3-box{
-        padding-left:10px;
-        padding-right:10px;
-      }
-      .main-box h1{font-size:16px;}
-      .subject,
-      .type-line,
-      .cafe-note,
-      .profile-box h2,
-      .note-box h2,
-      .note-box p,
-      .profile-row{
-        font-size:10px;
-      }
-      .cafe-name{font-size:16px;}
-      .top3-box{font-size:10px;}
+      button{width:100%}
+      .result-card{border-radius:12px;}
     }
   </style>
 </head>
@@ -409,7 +370,7 @@
     <!-- 설문 카드 -->
     <div class="card">
       <div class="question">
-        <div class="q-title">1) 상큼함(산미, 신맛)</div>
+        <div class="q-title">1) 상큼함(산미,신맛)</div>
         <div class="likert-row">
           <div class="likert-label">좋아함</div>
           <div class="likert">
@@ -548,7 +509,7 @@
         const list = await res.json();
         coffeeList = list;
         lastFetched = new Date();
-        statusEl.textContent = `저장된 커피 데이터 총 ${list.length}개`;
+        statusEl.textContent = `등록된 경북대 인근 카페 데이터 총 ${list.length}개`;
       }catch(e){
         statusEl.textContent = '⚠️ 데이터 로드 실패';
       }
@@ -592,15 +553,12 @@
     function classifyType(s,n,b){
       const max = Math.max(s,n,b);
 
-      // 하나가 확실히 크면 단일형
       if (s >= max && s >= n+1 && s >= b+1) return 'sour';
       if (n >= max && n >= s+1 && n >= b+1) return 'nutty';
       if (b >= max && b >= s+1 && b >= n+1) return 'bitter';
 
-      // 상큼+고소 비슷하게 높은 경우
       if (Math.abs(s-n) <= 1 && s >= 2 && n >= 2) return 'sourgoso';
 
-      // 나머지: 블렌드형
       return 'blend';
     }
 
@@ -623,23 +581,11 @@
         .join("");
     }
 
-    /* ===== 결과 카드 화면높이에 맞게 축소 ===== */
-    function fitResultCardToViewport(){
-      const card = document.getElementById('resultCard');
-      if(!card) return;
-
-      const rect = card.getBoundingClientRect();
-      const vh   = window.innerHeight;
-      const margin = 80; // 위아래 여유
-
-      const scale = Math.min(1, (vh - margin) / rect.height);
-      card.style.transform = `scale(${scale})`;
-    }
-
     /* ===== 결과 렌더링 ===== */
     function renderResult(best, s, n, b){
       const typeKey = classifyType(s,n,b);
       const config = TYPE_CONFIG[typeKey];
+      const card = document.getElementById("resultCard");
 
       document.getElementById("resultType").textContent = config.label;
       document.getElementById("typeDesc").textContent  = config.desc;
@@ -665,17 +611,12 @@
         b===2 ? "적당히 쌉사름한 편입니다." :
                 "쌉사름함은 약한 편입니다.";
 
-      // TOP3 내용 미리 계산(보여줄지는 토글로)
       renderTop3(s,n,b);
 
-      // 결과 카드 & 버튼 보이기
       document.getElementById("resultWrap").style.display = "flex";
       document.getElementById("resultActions").style.display = "flex";
       document.getElementById("top3Box").style.display = "none";
       document.getElementById("toggleTop3Btn").textContent = "☕ 비슷한 커피 TOP3 보기";
-
-      // 레이아웃이 그려진 뒤에 화면 높이에 맞게 축소
-      setTimeout(fitResultCardToViewport, 50);
 
       document.getElementById("resultWrap").scrollIntoView({behavior:"smooth"});
     }
@@ -717,30 +658,20 @@
       if(top3Box.style.display === "none" || top3Box.style.display === ""){
         top3Box.style.display = "block";
         toggleBtn.textContent = "☕ 비슷한 커피 TOP3 숨기기";
-        setTimeout(fitResultCardToViewport, 50);
       }else{
         top3Box.style.display = "none";
         toggleBtn.textContent = "☕ 비슷한 커피 TOP3 보기";
-        setTimeout(fitResultCardToViewport, 50);
       }
     });
 
     /* ===== 결과 이미지 저장 ===== */
     document.getElementById("saveImageBtn").addEventListener("click", ()=>{
-      const card = document.getElementById("resultCard");
-
-      // 현재 스케일값 저장 후 1배로 돌려놓고 캡쳐
-      const prevTransform = card.style.transform;
-      card.style.transform = 'scale(1)';
-
-      html2canvas(card,{scale:2}).then(canvas=>{
+      const target = document.getElementById("resultCard");
+      html2canvas(target,{scale:2}).then(canvas=>{
         const link = document.createElement("a");
         link.download = "coffee-result.jpg";
         link.href = canvas.toDataURL("image/jpeg",0.9);
         link.click();
-      }).finally(()=>{
-        // 다시 화면용 스케일 복원
-        card.style.transform = prevTransform;
       });
     });
 
@@ -751,13 +682,6 @@
       document.getElementById("resultActions").style.display = "none";
       window.scrollTo({top:0,behavior:"smooth"});
     }
-
-    /* 창 크기 바뀔 때도 카드 스케일 다시 계산 */
-    window.addEventListener('resize', ()=>{
-      if(document.getElementById('resultWrap').style.display === 'flex'){
-        fitResultCardToViewport();
-      }
-    });
   </script>
 </body>
 </html>
