@@ -720,23 +720,40 @@
       }
     });
 
-    /* ===== 결과 이미지 저장 ===== */
-    document.getElementById("saveImageBtn").addEventListener("click", ()=>{
-      const target = document.getElementById("resultCard");
+    /* ===== 결과 이미지 저장 (인스타용) ===== */
+document.getElementById("saveImageBtn").addEventListener("click", ()=>{
+  const target = document.getElementById("resultCard");
 
-      html2canvas(target,{
-        scale:2,
-        useCORS:true,
-        windowWidth: target.scrollWidth,
-        windowHeight: target.scrollHeight,
-        scrollY: -window.scrollY
-      }).then(canvas=>{
-        const link = document.createElement("a");
-        link.download = "coffee-result.jpg";
-        link.href = canvas.toDataURL("image/jpeg",0.95);
-        link.click();
-      });
-    });
+  // 일단 카드가 화면 상단에 오도록 스크롤(캔버스 좌표 꼬임 방지)
+  const prevScrollY = window.scrollY;
+  window.scrollTo(0, target.offsetTop);
+
+  html2canvas(target, {
+    scale: 3,                // 더 선명하게
+    useCORS: true,
+    backgroundColor: '#f5efe9',
+    scrollY: -window.scrollY // 페이지 전체가 아니라 요소 기준으로 캡쳐
+  }).then(canvas=>{
+    // 원래 스크롤 위치 복구
+    window.scrollTo(0, prevScrollY);
+
+    // 가로 1080px 기준으로 리사이즈 (인스타 스토리/피드 둘 다 쓰기 좋게)
+    const maxWidth = 1080;
+    const ratio = maxWidth / canvas.width;
+
+    const outCanvas = document.createElement("canvas");
+    outCanvas.width  = maxWidth;
+    outCanvas.height = canvas.height * ratio;
+
+    const ctx = outCanvas.getContext("2d");
+    ctx.drawImage(canvas, 0, 0, outCanvas.width, outCanvas.height);
+
+    const link = document.createElement("a");
+    link.download = "coffee-result.jpg";
+    link.href = outCanvas.toDataURL("image/jpeg", 0.9);
+    link.click();
+  });
+});
 
     /* ===== 다시 검사하기 ===== */
     function retry(){
