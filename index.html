@@ -8,22 +8,26 @@
   <!-- 결과 카드 캡쳐용 라이브러리 -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
+  <!-- Leaflet (지도) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     :root{
-      --bg:#f5efe9;
-      --card:#fff;
-      --muted:#7a6a5a;
-      --coffee-dark:#6b3e26;
-      --coffee-mid:#a67856;
-      --tap:44px;          /* 동그라미 크기 */
+      /* 캡처 톤 참고해서 재조합한 팔레트 */
+      --bg:#f4eee6;          /* 전체 배경 */
+      --card:#ffffff;        /* 메인 카드 */
+      --muted:#9a8775;       /* 보조 텍스트 */
+      --coffee-dark:#8a5533; /* 메인 버튼 / 제목 */
+      --coffee-mid:#c88a54;  /* 선택 강조 색 */
+      --tap:44px;
       --radius:14px;
-      --shadow:0 6px 20px rgba(107,62,38,0.06);
+      --shadow:0 6px 20px rgba(104,68,40,0.09);
 
-      /* 결과 카드 공통 변수 */
-      --ink:#4a2c1a;
-      --card-bg:#fffdf7;
-      --line:rgba(0,0,0,0.12);
-      --accent:#a67856;
+      --ink:#5b3923;         /* 결과 카드 텍스트 */
+      --card-bg:#fffaf1;     /* 결과 카드 배경 */
+      --line:rgba(0,0,0,0.09);
+      --accent:#b8743b;      /* 포인트 색 */
     }
 
     *{box-sizing:border-box;margin:0;padding:0}
@@ -43,11 +47,11 @@
       max-width:880px;
       margin:0 auto;
       padding:24px;
-      background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.85));
+      background:linear-gradient(180deg,rgba(255,255,255,0.65),rgba(255,255,255,0.9));
       border-radius:var(--radius);
     }
 
-    /* 헤더 영역 */
+    /* 공통 헤더 */
     header{
       display:flex;
       align-items:center;
@@ -59,10 +63,65 @@
       height:64px;
       border-radius:12px;
       object-fit:cover;
-      box-shadow:0 4px 14px rgba(0,0,0,0.06);
+      box-shadow:0 4px 14px rgba(0,0,0,0.05);
     }
     h1{font-size:22px}
     p.lead{margin-top:4px;color:var(--muted);font-size:14px}
+
+    button{
+      background:var(--coffee-dark);
+      border:none;
+      color:white;
+      padding:12px 16px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:800;
+      font-size:14px;
+      box-shadow:0 6px 14px rgba(104,68,40,0.22);
+    }
+
+    /* ===== 화면 전환용 ===== */
+    .screen{display:none;}
+    .screen.active{display:block;}
+
+    /* 메인 메뉴 */
+    .menu-card{
+      margin-top:18px;
+      background:var(--card);
+      border-radius:12px;
+      padding:18px 16px 20px;
+      box-shadow:var(--shadow);
+      text-align:center;
+    }
+    .menu-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:6px;
+      color:var(--coffee-dark);
+    }
+    .menu-sub{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:16px;
+    }
+    .menu-buttons{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:6px;
+    }
+    .menu-btn-main{
+      background:var(--coffee-dark);
+    }
+    .menu-btn-sub{
+      background:var(--accent);
+    }
+    .menu-btn-ghost{
+      background:transparent;
+      color:var(--coffee-dark);
+      border:1px solid rgba(0,0,0,0.12);
+      box-shadow:none;
+    }
 
     /* 설문 카드 */
     .card{
@@ -73,9 +132,13 @@
       box-shadow:var(--shadow);
     }
     .question{margin-bottom:18px}
-    .q-title{font-weight:800;font-size:15px;margin-bottom:8px}
+    .q-title{
+      font-weight:800;
+      font-size:15px;
+      margin-bottom:8px;
+      color:var(--coffee-dark);
+    }
 
-    /* ===== Likert (선택 원) ===== */
     .likert-row{
       display:flex;
       flex-direction:column;
@@ -105,12 +168,12 @@
       width:var(--tap);
       height:var(--tap);
       border-radius:50%;
-      border:3px solid rgba(107,62,38,0.25);
+      border:2px solid rgba(154,135,117,0.5);
       display:flex;
       align-items:center;
       justify-content:center;
       transition:all .18s;
-      background:#fff;
+      background:#fffdf9;
     }
     .likert small{
       font-size:12px;
@@ -119,46 +182,32 @@
     }
     .likert input{display:none}
     .likert input:checked + .dot{
-      background:var(--coffee-mid);
-      border-color:var(--coffee-mid);
-      box-shadow:0 6px 18px rgba(0,0,0,0.08);
+      background:#8a5533;
+      border-color:#8a5533;
+      box-shadow:0 6px 18px rgba(0,0,0,0.15);
     }
-    .likert input:checked + .dot small{color:#fff}
+    .likert input:checked + .dot small{color:#fffdf7}
 
-    button{
-      background:var(--coffee-dark);
-      border:none;
-      color:white;
-      padding:12px 16px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:800;
-      font-size:14px;
-      box-shadow:0 6px 14px rgba(107,62,38,0.18);
-    }
     .actions{text-align:right;margin-top:8px}
     .status{margin-top:6px;font-size:13px;color:var(--muted)}
 
-    /* ===== 결과 카드 디자인 ===== */
-
+    /* ===== 결과 카드 ===== */
     .result-wrap{
       display:none;
       justify-content:center;
       margin-top:24px;
-      margin-bottom:12px;  /* 아래 버튼과 간격 */
+      margin-bottom:12px;
     }
-
     .result-container{
       width:100%;
       max-width:420px;
       display:flex;
       justify-content:center;
     }
-
     .result-card{
       width:100%;
       max-width:420px;
-      height:auto;              /* 자동 높이 */
+      height:auto;
       background:var(--card-bg);
       border-radius:16px;
       border:1px solid var(--line);
@@ -167,7 +216,6 @@
       display:flex;
       flex-direction:column;
       color:var(--ink);
-      /* overflow 제거: 내용 안 잘리게 */
       overflow:visible;
     }
 
@@ -204,6 +252,7 @@
     .main-box h1{
       font-size:18px;
       margin-bottom:4px;
+      color:var(--coffee-dark);
     }
     .subject{
       font-size:12px;
@@ -225,7 +274,7 @@
       padding:10px 12px;
       border-radius:10px;
       border:1px dashed var(--accent);
-      background:rgba(255,250,240,0.9);
+      background:rgba(255,248,238,0.96);
       text-align:center;
       flex-shrink:0;
     }
@@ -257,7 +306,7 @@
       padding:8px 10px;
       border-radius:10px;
       border:1px solid var(--line);
-      background:rgba(255,255,255,0.9);
+      background:rgba(255,255,255,0.96);
       flex-shrink:0;
     }
     .profile-box h2{
@@ -290,7 +339,7 @@
       padding:8px 9px;
       border-radius:8px;
       border:1px solid var(--line);
-      background:rgba(250,248,244,0.95);
+      background:rgba(250,248,244,0.98);
       flex:1;
       display:flex;
       flex-direction:column;
@@ -305,15 +354,14 @@
       color:rgba(0,0,0,0.82);
     }
 
-    /* TOP3 영역 (카드 안) */
     .top3-box{
       margin-top:6px;
       padding:8px 9px;
       border-radius:8px;
       border:1px dashed var(--line);
-      background:rgba(255,255,255,0.9);
+      background:rgba(255,255,255,0.95);
       font-size:11px;
-      display:none; /* 기본은 숨김, 버튼으로 토글 */
+      display:none;
     }
     .top3-box h3{
       font-size:11px;
@@ -334,7 +382,6 @@
       color:rgba(0,0,0,0.55);
     }
 
-    /* 결과 하단 버튼들 */
     .result-actions{
       display:none;
       max-width:420px;
@@ -349,18 +396,60 @@
       padding:9px 8px;
       white-space:nowrap;
     }
-    #toggleTop3Btn{background:#8a5b3a;}
-    #saveImageBtn{background:#6b3e26;}
-    #retryBtn{background:#a67856;}
+    #toggleTop3Btn{background:var(--accent);}
+    #saveImageBtn{background:var(--coffee-dark);}
+    #retryBtn{background:#cf9a5f;}
 
-    /* 아주 작은 화면용(예: iPhone SE) */
+    /* 지도 화면 */
+    .map-card{
+      margin-top:18px;
+      background:var(--card);
+      border-radius:12px;
+      padding:14px 14px 18px;
+      box-shadow:var(--shadow);
+    }
+    .map-title{
+      font-size:18px;
+      font-weight:800;
+      margin-bottom:4px;
+      color:var(--coffee-dark);
+    }
+    .map-sub{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:10px;
+    }
+
+    /* 높이는 JS에서 1:1로 강제 – 여기선 width만 지정 */
+    #knuMap{
+      width:100%;
+      border-radius:12px;
+      overflow:hidden;
+    }
+
+    .map-legend{
+      margin-top:8px;
+      font-size:11px;
+      color:var(--muted);
+    }
+    .legend-row{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-top:2px;
+    }
+    .legend-dot{
+      width:10px;
+      height:10px;
+      border-radius:50%;
+    }
+
+    /* 아주 작은 화면용 */
     @media (max-width:360px){
       :root{ --tap:38px; }
       .likert{gap:6px;}
       .likert-option{gap:3px;}
-      .result-card{
-        padding:12px 12px 18px;
-      }
+      .result-card{padding:12px 12px 18px;}
       .main-box h1{font-size:17px;}
     }
 
@@ -373,7 +462,7 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- 헤더 -->
+    <!-- 공통 헤더 -->
     <header>
       <img src="./logo.PNG" alt="커피 로고">
       <div>
@@ -382,181 +471,279 @@
       </div>
     </header>
 
-    <!-- 설문 카드 -->
-    <div class="card">
-      <div class="question">
-        <div class="q-title">1) 상큼함(산미, 신맛)</div>
-        <div class="likert-row">
-          <div class="likert">
-            <label class="likert-option">
-              <span class="edge-label">좋아함</span>
-              <input type="radio" name="sour" value="4">
-              <div class="dot"><small>매우</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">&nbsp;</span>
-              <input type="radio" name="sour" value="3">
-              <div class="dot"><small>약간</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">&nbsp;</span>
-              <input type="radio" name="sour" value="2">
-              <div class="dot"><small>별로</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">싫어함</span>
-              <input type="radio" name="sour" value="1">
-              <div class="dot"><small>전혀</small></div>
-            </label>
+    <!-- ===== 1. 메인 메뉴 화면 ===== -->
+    <section id="menuScreen" class="screen active">
+      <div class="menu-card">
+        <div class="menu-title">나는 어떤 커피형 인간인가</div>
+        <p class="menu-sub">
+          나에게 맞는 아아는 무슨 브랜드?<br>
+          경북대 인근 아아지도를 함께 만들어갑니다.
+        </p>
+        <div class="menu-buttons">
+          <button class="menu-btn-main" onclick="showScreen('test')">
+            ☕️ 아아 취향 테스트
+          </button>
+          <button class="menu-btn-sub" onclick="window.location.href='https://naver.me/FfBQjw53';">
+            📋 함께 경북대 아아지도 만들기
+          </button>
+          <button class="menu-btn-ghost" onclick="showScreen('map')">
+            🧭 경북대 아아지도(개발중)
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== 2. 테스트 화면 ===== -->
+    <section id="testScreen" class="screen">
+      <!-- 설문 카드 -->
+      <div class="card">
+        <div class="question">
+          <div class="q-title">1) 상큼함(산미, 신맛)</div>
+          <div class="likert-row">
+            <div class="likert">
+              <label class="likert-option">
+                <span class="edge-label">좋아함</span>
+                <input type="radio" name="sour" value="4">
+                <div class="dot"><small>매우</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">&nbsp;</span>
+                <input type="radio" name="sour" value="3">
+                <div class="dot"><small>약간</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">&nbsp;</span>
+                <input type="radio" name="sour" value="2">
+                <div class="dot"><small>별로</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">싫어함</span>
+                <input type="radio" name="sour" value="1">
+                <div class="dot"><small>전혀</small></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="question">
+          <div class="q-title">2) 고소함</div>
+          <div class="likert-row">
+            <div class="likert">
+              <label class="likert-option">
+                <span class="edge-label">좋아함</span>
+                <input type="radio" name="nutty" value="4">
+                <div class="dot"><small>매우</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">&nbsp;</span>
+                <input type="radio" name="nutty" value="3">
+                <div class="dot"><small>약간</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">&nbsp;</span>
+                <input type="radio" name="nutty" value="2">
+                <div class="dot"><small>별로</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">싫어함</span>
+                <input type="radio" name="nutty" value="1">
+                <div class="dot"><small>전혀</small></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="question">
+          <div class="q-title">3) 쌉사름함(쓴맛)</div>
+          <div class="likert-row">
+            <div class="likert">
+              <label class="likert-option">
+                <span class="edge-label">좋아함</span>
+                <input type="radio" name="bitter" value="4">
+                <div class="dot"><small>매우</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">&nbsp;</span>
+                <input type="radio" name="bitter" value="3">
+                <div class="dot"><small>약간</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">&nbsp;</span>
+                <input type="radio" name="bitter" value="2">
+                <div class="dot"><small>별로</small></div>
+              </label>
+              <label class="likert-option">
+                <span class="edge-label">싫어함</span>
+                <input type="radio" name="bitter" value="1">
+                <div class="dot"><small>전혀</small></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="status" class="status">데이터 불러오는 중…</div>
+
+        <div class="actions">
+          <button onclick="calcResult()">결과 보기</button>
+        </div>
+      </div>
+
+      <!-- 결과 카드 -->
+      <div class="result-wrap" id="resultWrap">
+        <div class="result-container">
+          <div class="result-card" id="resultCard">
+            <header class="report-header">
+              <img src="./logo.PNG" alt="커피 로고" class="brand-logo">
+              <div>
+                <div class="report-head-text">프로젝트 커피형 인간입니다.</div>
+                <div class="report-head-title">커피 유전자 검사 결과서</div>
+              </div>
+            </header>
+
+            <section class="main-box">
+              <h1>커피형 인간입니다.</h1>
+              <p class="subject">검사 대상: <span>커피 유전자 보유자</span>님</p>
+              <p class="type-line">검사 결과 유형: <strong id="resultType">상큼형</strong></p>
+              <p class="type-desc" id="typeDesc">
+                상큼한 산미와 밝은 향을 사랑하는,
+                새로움에 끌리는 커피형 인간입니다.
+              </p>
+            </section>
+
+            <section class="cafe-box">
+              <div class="cafe-label">RECOMMENDED CAFE</div>
+              <div class="cafe-name" id="bestCafeName"></div>
+              <p class="cafe-note">
+                현재까지 수집된 커피 데이터 기준,  
+                당신의 취향과 가장 잘 맞는 카페입니다.
+              </p>
+            </section>
+
+            <section class="profile-box">
+              <h2>맛 프로파일</h2>
+              <div class="profile-row">
+                <div class="profile-label">상큼함</div>
+                <div class="profile-dots" id="dotAcid"></div>
+                <div class="profile-text" id="txtAcid"></div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-label">고소함</div>
+                <div class="profile-dots" id="dotNutty"></div>
+                <div class="profile-text" id="txtNutty"></div>
+              </div>
+              <div class="profile-row">
+                <div class="profile-label">쌉사름</div>
+                <div class="profile-dots" id="dotBitter"></div>
+                <div class="profile-text" id="txtBitter"></div>
+              </div>
+            </section>
+
+            <section class="note-box">
+              <h2>해석 메모</h2>
+              <p id="noteText"></p>
+            </section>
+
+            <section class="top3-box" id="top3Box">
+              <h3>비슷한 커피 TOP3</h3>
+              <ul id="top3List"></ul>
+            </section>
+
+            <div class="report-footer">
+              본 결과는 ‘커피형 인간입니다.’ 프로젝트의 취향 데이터를 기반으로 산출된 비공식 검사입니다.<br>
+              커피형 인간입니다. · coffeeperson.co.kr
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="question">
-        <div class="q-title">2) 고소함</div>
-        <div class="likert-row">
-          <div class="likert">
-            <label class="likert-option">
-              <span class="edge-label">좋아함</span>
-              <input type="radio" name="nutty" value="4">
-              <div class="dot"><small>매우</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">&nbsp;</span>
-              <input type="radio" name="nutty" value="3">
-              <div class="dot"><small>약간</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">&nbsp;</span>
-              <input type="radio" name="nutty" value="2">
-              <div class="dot"><small>별로</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">싫어함</span>
-              <input type="radio" name="nutty" value="1">
-              <div class="dot"><small>전혀</small></div>
-            </label>
+      <!-- 결과 하단 버튼들 -->
+      <div class="result-actions" id="resultActions">
+        <button id="toggleTop3Btn">☕ 비슷한 커피 TOP3 보기</button>
+        <button id="saveImageBtn">📱 결과 이미지 저장하기</button>
+        <button id="retryBtn" onclick="retry()">🔄 다시 검사하기</button>
+        <button class="menu-btn-ghost" onclick="showScreen('menu')">← 메뉴로 돌아가기</button>
+      </div>
+    </section>
+
+    <!-- ===== 3. 경북대 아아 지도 화면 ===== -->
+    <section id="mapScreen" class="screen">
+      <div class="map-card">
+        <div class="map-title">경북대 아아 지도(개발중)</div>
+        <p class="map-sub">
+          경북대 인근의 아이스아메리카노 브랜드를 맛 별로 하나씩 모으는 중입니다.<br>
+          점 색깔은 카페의 대표 아아 맛 타입을 의미해요.
+        </p>
+        <div id="knuMap"></div>
+        <div class="map-legend">
+          <div class="legend-row">
+            <div class="legend-dot" style="background:#f39c12;"></div> 상큼형
+          </div>
+          <div class="legend-row">
+            <div class="legend-dot" style="background:#a67c52;"></div> 고소형
+          </div>
+          <div class="legend-row">
+            <div class="legend-dot" style="background:#6b3e26;"></div> 쌉사름형
+          </div>
+          <div class="legend-row">
+            <div class="legend-dot" style="background:#d35400;"></div> 복합 상큼고소형 / 블렌드형
           </div>
         </div>
-      </div>
-
-      <div class="question">
-        <div class="q-title">3) 쌉사름함(쓴맛)</div>
-        <div class="likert-row">
-          <div class="likert">
-            <label class="likert-option">
-              <span class="edge-label">좋아함</span>
-              <input type="radio" name="bitter" value="4">
-              <div class="dot"><small>매우</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">&nbsp;</span>
-              <input type="radio" name="bitter" value="3">
-              <div class="dot"><small>약간</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">&nbsp;</span>
-              <input type="radio" name="bitter" value="2">
-              <div class="dot"><small>별로</small></div>
-            </label>
-            <label class="likert-option">
-              <span class="edge-label">싫어함</span>
-              <input type="radio" name="bitter" value="1">
-              <div class="dot"><small>전혀</small></div>
-            </label>
-          </div>
+        <div style="margin-top:10px;text-align:right;">
+          <button class="menu-btn-ghost" onclick="showScreen('menu')">← 메뉴로 돌아가기</button>
         </div>
       </div>
-
-      <div id="status" class="status">데이터 불러오는 중…</div>
-
-      <div class="actions">
-        <button onclick="calcResult()">결과 보기</button>
-      </div>
-    </div>
-
-    <!-- 결과 카드 -->
-    <div class="result-wrap" id="resultWrap">
-      <div class="result-container">
-        <div class="result-card" id="resultCard">
-          <header class="report-header">
-            <img src="./logo.PNG" alt="커피 로고" class="brand-logo">
-            <div>
-              <div class="report-head-text">프로젝트 커피형 인간입니다.</div>
-              <div class="report-head-title">커피 유전자 검사 결과서</div>
-            </div>
-          </header>
-
-          <section class="main-box">
-            <h1>커피형 인간입니다.</h1>
-            <p class="subject">검사 대상: <span>커피 유전자 보유자</span>님</p>
-            <p class="type-line">검사 결과 유형: <strong id="resultType">상큼형</strong></p>
-            <p class="type-desc" id="typeDesc">
-              상큼한 산미와 밝은 향을 사랑하는,
-              새로움에 끌리는 커피형 인간입니다.
-            </p>
-          </section>
-
-          <section class="cafe-box">
-            <div class="cafe-label">RECOMMENDED CAFE</div>
-            <div class="cafe-name" id="bestCafeName"></div>
-            <p class="cafe-note">
-              현재까지 수집된 커피 데이터 기준,  
-              당신의 취향과 가장 잘 맞는 카페입니다.
-            </p>
-          </section>
-
-          <section class="profile-box">
-            <h2>맛 프로파일</h2>
-            <div class="profile-row">
-              <div class="profile-label">상큼함</div>
-              <div class="profile-dots" id="dotAcid"></div>
-              <div class="profile-text" id="txtAcid"></div>
-            </div>
-            <div class="profile-row">
-              <div class="profile-label">고소함</div>
-              <div class="profile-dots" id="dotNutty"></div>
-              <div class="profile-text" id="txtNutty"></div>
-            </div>
-            <div class="profile-row">
-              <div class="profile-label">쌉사름</div>
-              <div class="profile-dots" id="dotBitter"></div>
-              <div class="profile-text" id="txtBitter"></div>
-            </div>
-          </section>
-
-          <section class="note-box">
-            <h2>해석 메모</h2>
-            <p id="noteText"></p>
-          </section>
-
-          <!-- TOP3 영역: 기본은 숨김, 버튼으로 토글 -->
-          <section class="top3-box" id="top3Box">
-            <h3>비슷한 커피 TOP3</h3>
-            <ul id="top3List"></ul>
-          </section>
-
-          <div class="report-footer">
-            본 결과는 ‘커피형 인간입니다.’ 프로젝트의 취향 데이터를 기반으로 산출된 비공식 검사입니다.<br>
-            커피형 인간입니다. · coffeeperson.co.kr
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 결과 하단 버튼들 -->
-    <div class="result-actions" id="resultActions">
-      <button id="toggleTop3Btn">☕ 비슷한 커피 TOP3 보기</button>
-      <button id="saveImageBtn">📱 결과 이미지 저장하기</button>
-      <button id="retryBtn" onclick="retry()">🔄 다시 검사하기</button>
-    </div>
+    </section>
 
   </div>
 
   <script>
+    /* ===== 지도 박스를 정사각형(1:1)으로 맞추기 ===== */
+    let knuMap = null;
+    let mapInitialized = false;
+
+    function setSquareMap(){
+      const el = document.getElementById('knuMap');
+      if(!el) return;
+
+      const w = el.offsetWidth;
+      if(!w) return;
+
+      el.style.height = w + 'px';
+
+      if (knuMap) {
+        knuMap.invalidateSize();
+      }
+    }
+
+    window.addEventListener('resize', setSquareMap);
+
+    /* ===== 화면 전환 ===== */
+    function showScreen(name){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+
+      if(name === 'menu'){
+        document.getElementById('menuScreen').classList.add('active');
+        window.scrollTo({top:0,behavior:'smooth'});
+      }else if(name === 'test'){
+        document.getElementById('testScreen').classList.add('active');
+        window.scrollTo({top:0,behavior:'smooth'});
+      }else if(name === 'map'){
+        document.getElementById('mapScreen').classList.add('active');
+
+        // 화면에 보이는 다음 프레임에서 크기 맞추고 지도 초기화
+        requestAnimationFrame(()=>{
+          setSquareMap();
+          initKnuMap();
+        });
+      }
+    }
+
     /* ===== 데이터 로딩 ===== */
     const JSON_URL = './coffee-data.json?v=10';
+    const CAFE_JSON_URL = './knu-cafes.json?v=1';
+
     let coffeeList = [];
+    let knuCafes = [];
     let lastFetched = null;
     const statusEl = document.getElementById('status');
 
@@ -573,12 +760,23 @@
     }
     fetchCoffeeData();
 
-    /* ===== 설문 값 가져오기 ===== */
+    async function loadCafeData(){
+      if(knuCafes.length) return;
+      try{
+        const res = await fetch(CAFE_JSON_URL,{cache:'no-store'});
+        knuCafes = await res.json();
+      }catch(e){
+        console.error(e);
+        alert('카페 지도 데이터를 불러오지 못했습니다.');
+      }
+    }
+
+    /* ===== 설문 값 ===== */
     function getScore(name){
       return Number(document.querySelector(`input[name="${name}"]:checked`)?.value);
     }
 
-    /* ===== 타입 분류 로직 ===== */
+    /* ===== 타입 분류 ===== */
     const TYPE_CONFIG = {
       sour:{
         label:"상큼형",
@@ -721,41 +919,98 @@
     });
 
     /* ===== 결과 이미지 저장 (인스타용) ===== */
-document.getElementById("saveImageBtn").addEventListener("click", ()=>{
-  const target = document.getElementById("resultCard");
+    document.getElementById("saveImageBtn").addEventListener("click", ()=>{
+      const target = document.getElementById("resultCard");
 
-  // 일단 카드가 화면 상단에 오도록 스크롤(캔버스 좌표 꼬임 방지)
-  const prevScrollY = window.scrollY;
-  window.scrollTo(0, target.offsetTop);
+      const prevScrollY = window.scrollY;
+      window.scrollTo(0, target.offsetTop);
 
-  html2canvas(target, {
-    scale: 3,                // 더 선명하게
-    useCORS: true,
-    backgroundColor: '#f5efe9',
-    scrollY: -window.scrollY // 페이지 전체가 아니라 요소 기준으로 캡쳐
-  }).then(canvas=>{
-    // 원래 스크롤 위치 복구
-    window.scrollTo(0, prevScrollY);
+      html2canvas(target, {
+        scale: 3,
+        useCORS: true,
+        backgroundColor: '#f4eee6',
+        scrollY: -window.scrollY
+      }).then(canvas=>{
+        window.scrollTo(0, prevScrollY);
 
-    // 가로 1080px 기준으로 리사이즈 (인스타 스토리/피드 둘 다 쓰기 좋게)
-    const maxWidth = 1080;
-    const ratio = maxWidth / canvas.width;
+        const maxWidth = 1080;
+        const ratio = maxWidth / canvas.width;
 
-    const outCanvas = document.createElement("canvas");
-    outCanvas.width  = maxWidth;
-    outCanvas.height = canvas.height * ratio;
+        const outCanvas = document.createElement("canvas");
+        outCanvas.width  = maxWidth;
+        outCanvas.height = canvas.height * ratio;
 
-    const ctx = outCanvas.getContext("2d");
-    ctx.drawImage(canvas, 0, 0, outCanvas.width, outCanvas.height);
+        const ctx = outCanvas.getContext("2d");
+        ctx.drawImage(canvas, 0, 0, outCanvas.width, outCanvas.height);
 
-    const link = document.createElement("a");
-    link.download = "coffee-result.jpg";
-    link.href = outCanvas.toDataURL("image/jpeg", 0.9);
-    link.click();
-  });
-});
+        const link = document.createElement("a");
+        link.download = "coffee-result.jpg";
+        link.href = outCanvas.toDataURL("image/jpeg", 0.9);
+        link.click();
+      });
+    });
 
-    /* ===== 다시 검사하기 ===== */
+    /* ===== 지도 기능 ===== */
+    function tasteColor(taste){
+      switch(taste){
+        case '상큼형': return '#f39c12';
+        case '고소형': return '#a67c52';
+        case '쌉사름형': return '#6b3e26';
+        case '복합 상큼고소형': return '#d35400';
+        case '복합 블렌드형': return '#d35400';
+        default: return '#555555';
+      }
+    }
+
+    async function initKnuMap(){
+      if(mapInitialized){
+        // 이미 만들어진 경우엔 크기만 다시 맞추기
+        setSquareMap();
+        if(knuMap) knuMap.invalidateSize();
+        return;
+      }
+
+      await loadCafeData();
+
+      // 컨테이너가 화면에 보이는 상태에서 높이 먼저 세팅
+      setSquareMap();
+
+      knuMap = L.map('knuMap').setView([35.8880, 128.6100], 14);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+                  {
+                    attribution: '&copy; OSM &copy; CARTO',
+                    maxZoom: 19
+                  }
+      ).addTo(knuMap);
+
+      knuCafes.forEach(cafe=>{
+        const color = tasteColor(cafe.taste);
+        const marker = L.circleMarker([cafe.lat, cafe.lng], {
+          radius: 8,
+          color,
+          fillColor: color,
+          fillOpacity: 0.9
+        }).addTo(knuMap);
+
+        marker.bindPopup(`
+          <strong>${cafe.name}</strong><br>
+          맛 타입: ${cafe.taste}<br>
+          가격: ${cafe.price.toLocaleString()}원<br>
+          ${cafe.note ?? ''}
+        `);
+      });
+
+      mapInitialized = true;
+
+      // 초기 렌더 후 한 번 더 사이즈 보정
+      setTimeout(()=>{
+        setSquareMap();
+        knuMap.invalidateSize();
+      },100);
+    }
+
+    /* 다시 검사하기 */
     function retry(){
       document.querySelectorAll("input[type=radio]").forEach(el=>el.checked=false);
       document.getElementById("resultWrap").style.display = "none";
